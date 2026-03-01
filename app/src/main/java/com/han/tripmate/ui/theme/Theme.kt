@@ -1,54 +1,44 @@
 package com.han.tripmate.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
+// 다크 모드용 색상 (다크 모드 지원할 때 수정)
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = MainBlue,
+    secondary = SubBlue,
+    tertiary = White,
+    background = DarkGrey,
+    surface = DarkGrey,
+    onPrimary = White,
+    onSecondary = DarkGrey
 )
 
+// 라이트 모드용 색상 (기본)
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = MainBlue,         // 메인 블루
+    secondary = SubBlue,        // 연한 블루
+    tertiary = DarkGrey,        // 텍스트 등
+    background = LightGrey,     // 전체 배경
+    surface = White,            // 카드나 버튼 배경
+    onPrimary = White,          // 메인 블루 위 글자색
+    onSecondary = DarkGrey,     // 연한 블루 위 글자색
+    onBackground = DarkGrey,    // 배경 위 글자색
+    onSurface = DarkGrey        // 표면 위 글자색
 )
 
 @Composable
 fun TripMateTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // 다이나믹 컬러(기기 배경색 맞춤). 일단 false
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
