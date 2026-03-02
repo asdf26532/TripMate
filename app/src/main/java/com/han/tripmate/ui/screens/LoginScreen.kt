@@ -8,9 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.han.tripmate.ui.theme.MainBlue
+import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
 fun LoginScreen(onLoginClick: () -> Unit) {
@@ -48,5 +50,13 @@ fun LoginScreen(onLoginClick: () -> Unit) {
         ) {
             Text(text = "구글로 시작하기", fontSize = 18.sp, color = Color.White)
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    TripMateTheme {
+        LoginScreen(onLoginClick = {})
     }
 }

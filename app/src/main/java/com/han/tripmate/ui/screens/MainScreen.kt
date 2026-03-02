@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.han.tripmate.ui.navigation.BottomNavItem
+import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
 fun MainScreen() {
@@ -79,3 +81,11 @@ fun PlanScreen() { Text("내 일정 목록") }
 
 @Composable
 fun SettingsScreen() { Text("설정 화면") }
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    TripMateTheme {
+        MainScreen()
+    }
+}
