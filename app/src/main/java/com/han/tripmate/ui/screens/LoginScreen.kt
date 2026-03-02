@@ -1,0 +1,52 @@
+package com.han.tripmate.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.han.tripmate.ui.theme.MainBlue
+
+@Composable
+fun LoginScreen(onLoginClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // 1. 로고 섹션
+        Text(
+            text = "TripMate",
+            fontSize = 40.sp,
+            fontWeight = FontWeight.Bold,
+            color = MainBlue
+        )
+        Text(
+            text = "당신의 여행 파트너",
+            fontSize = 16.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        // 2. 로그인 버튼
+        Button(
+            onClick = onLoginClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+        ) {
+            Text(text = "구글로 시작하기", fontSize = 18.sp, color = Color.White)
+        }
+    }
+}
