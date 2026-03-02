@@ -65,6 +65,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // 3. Navigation & Hilt (안정 버전)
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -75,6 +76,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     kapt("com.google.dagger:hilt-android-compiler:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
 
     // 4. Retrofit & Coil
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

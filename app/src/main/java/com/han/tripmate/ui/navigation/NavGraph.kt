@@ -10,12 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.han.tripmate.ui.screens.LoginScreen
-
-// 화면 경로 정의
-object Routes {
-    const val LOGIN = "login"
-    const val MAIN = "main"
-}
+import com.han.tripmate.ui.screens.MainScreen
 
 @Composable
 fun TripMateNavGraph(navController: NavHostController) {
@@ -25,14 +20,12 @@ fun TripMateNavGraph(navController: NavHostController) {
     ) {
         composable(Routes.LOGIN) {
             LoginScreen(onLoginClick = {
-                // 로그인 성공 시 메인으로 이동하는 로직 (나중에 구현)
+                // 로그인 성공 시 메인으로 이동하는 로직
                 navController.navigate(Routes.MAIN)
             })
         }
         composable(Routes.MAIN) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "메인 화면에 오신 것을 환영합니다!")
-            }
+            MainScreen()
         }
     }
 }

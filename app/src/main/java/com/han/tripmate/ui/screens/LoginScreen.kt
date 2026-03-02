@@ -22,7 +22,7 @@ fun LoginScreen(onLoginClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 1. 로고 섹션
+        //  로고 섹션
         Text(
             text = "TripMate",
             fontSize = 40.sp,
@@ -38,7 +38,7 @@ fun LoginScreen(onLoginClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(64.dp))
 
-        // 2. 로그인 버튼
+        // 로그인 버튼
         Button(
             onClick = onLoginClick,
             modifier = Modifier
