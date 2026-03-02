@@ -71,9 +71,6 @@ fun MainScreen() {
 
 // 임시 화면 (에러 방지용)
 @Composable
-fun HomeScreen() { Text("홈 화면") }
-
-@Composable
 fun ChattingScreen() { Text("채팅 목록") }
 
 @Composable
