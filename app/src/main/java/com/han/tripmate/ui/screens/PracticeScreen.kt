@@ -1,5 +1,6 @@
 package com.han.tripmate.ui.screens
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,11 +8,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,9 +29,8 @@ import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
-fun HomeScreen() {
+fun PracticeScreen() {
 
-    // 임시 데이터
     val serviceList = remember {
         listOf(
             TravelService(
@@ -64,50 +63,50 @@ fun HomeScreen() {
         )
     }
 
-    LazyColumn (
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 12.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(bottom = 8.dp)
     ) {
         item {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
-                    text = "현지 전문가와 함께\n특별한 여행을 만들어보세요",
+                    text = "TripMate",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 32.sp,
                     color = Color.Gray)
             }
         }
-        // 인기 여행지
         item {
             Text(
                 text = "인기 여행지",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 modifier = Modifier.padding(start = 12.dp)
-            )
+                )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(8.dp)
             ) {
                 items(5) { index ->
-                    TravelCard("추천 여행지 ${index + 1}")
+                    TravelCard2("추천 여행지 ${index + 1}")
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
 
         item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column( modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(
                     text = "현지 전문가 추천",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "TripMate가 검증한 가이드들을 만나보세요.",
+                    text = "TripMate가 검증한 가이드들을 만나보세요",
                     fontSize = 13.sp,
                     color = Color.Gray
                 )
@@ -115,7 +114,7 @@ fun HomeScreen() {
         }
 
         items(serviceList) { service ->
-            ServiceListItem(service)
+            ServiceListItem2(service)
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = Color.LightGray.copy(alpha = 0.2f))
@@ -124,7 +123,7 @@ fun HomeScreen() {
 }
 
 @Composable
-fun TravelCard(title: String) {
+fun TravelCard2(title : String) {
     Card(
         modifier = Modifier
             .width(160.dp)
@@ -132,10 +131,9 @@ fun TravelCard(title: String) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // 임시 배경색
             Box(modifier = Modifier
                 .fillMaxSize()
-                .background(MainBlue.copy(alpha = 0.2f)))
+                .background(MainBlue.copy(alpha = 0.1f)))
 
             Text(
                 text = title,
@@ -149,15 +147,15 @@ fun TravelCard(title: String) {
 }
 
 @Composable
-fun ServiceListItem(service: TravelService) {
+fun ServiceListItem2(service: TravelService) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clickable { /* 상세 페이지로 이동 */ },
+            .clickable { },
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. 이미지 영역 (Coil 사용)
+
         AsyncImage(
             model = service.thumbnailUrl,
             contentDescription = null,
@@ -168,7 +166,6 @@ fun ServiceListItem(service: TravelService) {
             contentScale = ContentScale.Crop
         )
 
-        // 2. 정보 영역
         Column(modifier = Modifier.weight(1f)) {
             // 카테고리 & 위치
             Text(
@@ -176,16 +173,14 @@ fun ServiceListItem(service: TravelService) {
                 fontSize = 12.sp,
                 color = Color.Gray
             )
-
             // 서비스 제목
             Text(
                 text = service.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.padding(top = 3.dp)
             )
-
             // 가격
             Text(
                 text = "${String.format("%,d", service.price)}원 / ${service.priceUnit}",
@@ -193,31 +188,30 @@ fun ServiceListItem(service: TravelService) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 4.dp)
             )
-
-            // 평점 및 뱃지
+            // 평점, 뱃지
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 3.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFB300),
+                    tint = Color(0xFFEB4E39),
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = " ${service.rating} (${service.reviewCount})",
+                    text = "${service.rating} (${service.reviewCount})",
                     fontSize = 13.sp,
                     color = Color.Gray
                 )
-                if (service.isVerified) {
+                if(service.isVerified) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
+                    Surface (
                         color = MainBlue.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = "전문가인증",
+                            text = "전문가 인증",
                             fontSize = 10.sp,
                             color = MainBlue,
                             fontWeight = FontWeight.Bold,
@@ -227,21 +221,20 @@ fun ServiceListItem(service: TravelService) {
                 }
             }
         }
-
-        // 3. 하트 아이콘
+        // 하트 아이콘
         Icon(
             imageVector = Icons.Default.FavoriteBorder,
             contentDescription = null,
             tint = Color.LightGray,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(24.dp)
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
+fun PracticeScreenPreview() {
     TripMateTheme {
-        HomeScreen()
+        PracticeScreen()
     }
 }
