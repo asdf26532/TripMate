@@ -49,7 +49,7 @@ fun SignUpScreen(
             text = "TripMate 계정 만들기",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Start).padding(top = 40.dp)
+            modifier = Modifier.align(Alignment.Start).padding(top = 20.dp)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -74,8 +74,6 @@ fun SignUpScreen(
                 if (email.isNotEmpty() && !isEmailValid) Text("올바른 이메일 형식이 아닙니다.")
             }
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = password,
@@ -117,7 +115,7 @@ fun SignUpScreen(
             colors = ButtonDefaults.buttonColors(containerColor = MainBlue),
             enabled = canSignUp
         ) {
-            Text("가입 완료", fontWeight = FontWeight.Bold)
+            Text("회원 가입하기", fontWeight = FontWeight.Bold)
         }
 
         TextButton(onClick = { onBack() }) {

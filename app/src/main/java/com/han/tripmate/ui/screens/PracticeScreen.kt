@@ -1,233 +1,154 @@
 package com.han.tripmate.ui.screens
 
-import android.graphics.drawable.Icon
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.han.tripmate.data.TravelService
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
-fun PracticeScreen() {
+fun PracticeScreen(
+    OnSignUpSuccess: () -> Unit,
+    OnBack: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var nickname by remember { mutableStateOf("") }
+    var isAgreed by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
-    val serviceList = remember {
-        listOf(
-            TravelService(
-                id = "1", authorId = "expert_01",
-                title = "파리 비즈니스 전문 통역 및 VIP 의전 가이드 (벤츠 제공)",
-                location = "프랑스 파리", category = "비즈니스/통역",
-                price = 45000, priceUnit = "시간당",
-                rating = 4.9, reviewCount = 128,
-                thumbnailUrl = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34", // 파리 예시 사진
-                isVerified = true, tags = listOf("통역전문", "차량지원")
-            ),
-            TravelService(
-                id = "2", authorId = "expert_02",
-                title = "도쿄 아키하바라 피규어&애니 투어 (현지인 단골샵 방문)",
-                location = "일본 도쿄", category = "테마투어",
-                price = 28000, priceUnit = "시간당",
-                rating = 4.8, reviewCount = 56,
-                thumbnailUrl = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf", // 도쿄 예시 사진
-                tags = listOf("덕질여행", "맛집탐방")
-            ),
-            TravelService(
-                id = "3", authorId = "expert_03",
-                title = "다낭 미케비치 서핑 레슨 및 로컬 스냅 촬영",
-                location = "베트남 다낭", category = "액티비티",
-                price = 35000, priceUnit = "1회당",
-                rating = 5.0, reviewCount = 42,
-                thumbnailUrl = "https://images.unsplash.com/photo-1559592413-7ece3593e103", // 다낭 예시 사진
-                isVerified = true, tags = listOf("인생샷", "초보환영")
-            )
-        )
-    }
+    // 유효성 검사 로직(실시간)
+    val isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isPasswordValid = password.length >= 8
+    var canSignUp = isEmailValid && isPasswordValid && nickname.isNotEmpty() && isAgreed
 
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(bottom = 8.dp)
-    ) {
-        item {
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(
-                    text = "TripMate",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 32.sp,
-                    color = Color.Gray)
-            }
-        }
-        item {
-            Text(
-                text = "인기 여행지",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(start = 12.dp)
-                )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                items(5) { index ->
-                    TravelCard2("추천 여행지 ${index + 1}")
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        item {
-            Column( modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(
-                    text = "현지 전문가 추천",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "TripMate가 검증한 가이드들을 만나보세요",
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                )
-            }
-        }
-
-        items(serviceList) { service ->
-            ServiceListItem2(service)
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = Color.LightGray.copy(alpha = 0.2f))
-        }
-    }
-}
-
-@Composable
-fun TravelCard2(title : String) {
-    Card(
+    Column(
         modifier = Modifier
-            .width(160.dp)
-            .height(150.dp),
-        shape = RoundedCornerShape(16.dp)
+            .fillMaxSize()
+
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .background(MainBlue.copy(alpha = 0.1f)))
-
-            Text(
-                text = title,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .align(Alignment.BottomStart),
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-fun ServiceListItem2(service: TravelService) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clickable { },
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-
-        AsyncImage(
-            model = service.thumbnailUrl,
-            contentDescription = null,
+        Text(
+            text = "TripMate 계정 만들기",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .size(110.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.LightGray),
-            contentScale = ContentScale.Crop
+                .align(Alignment.Start)
+                .padding(top = 20.dp)
+            )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it},
+            label = { Text("이름 (실명)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
-        Column(modifier = Modifier.weight(1f)) {
-            // 카테고리 & 위치
-            Text(
-                text = "${service.category} · ${service.location}",
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            // 서비스 제목
-            Text(
-                text = service.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                modifier = Modifier.padding(top = 3.dp)
-            )
-            // 가격
-            Text(
-                text = "${String.format("%,d", service.price)}원 / ${service.priceUnit}",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            // 평점, 뱃지
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 3.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFEB4E39),
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = "${service.rating} (${service.reviewCount})",
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                )
-                if(service.isVerified) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface (
-                        color = MainBlue.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = "전문가 인증",
-                            fontSize = 10.sp,
-                            color = MainBlue,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it},
+            label = { Text("이메일") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            isError = email.isNotEmpty() && !isEmailValid,
+            supportingText = {
+                if (email.isNotEmpty() && !isEmailValid) Text("올바른 이메일 형식이 아닙니다.")
+            }
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it},
+            label = { Text("비밀번호 (8자 이상)")},
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = null)
                 }
             }
-        }
-        // 하트 아이콘
-        Icon(
-            imageVector = Icons.Default.FavoriteBorder,
-            contentDescription = null,
-            tint = Color.LightGray,
-            modifier = Modifier.size(24.dp)
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = nickname,
+            onValueChange = { nickname = it},
+            label = { Text("닉네임") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isAgreed = !isAgreed }
+        ) {
+            Checkbox(checked = isAgreed, onCheckedChange = { isAgreed = it} )
+            Text(text = "[필수] 서비스 이용약관 및 개인정보 처리방침 동의", fontSize = 14.sp)
+        }
+
+
+        Button(
+            onClick = { OnSignUpSuccess() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(contentColor = MainBlue),
+            enabled = canSignUp
+            ) {
+            Text(text = "회원 가입하기", fontWeight = FontWeight.Bold )
+        }
+
+        TextButton(onClick = { OnBack() },) {
+            Text("취소하고 돌아가기", color = Color.Gray)
+        }
     }
 }
 
@@ -235,6 +156,7 @@ fun ServiceListItem2(service: TravelService) {
 @Composable
 fun PracticeScreenPreview() {
     TripMateTheme {
-        PracticeScreen()
+        PracticeScreen(OnSignUpSuccess = {}, OnBack = {}
+        )
     }
 }
