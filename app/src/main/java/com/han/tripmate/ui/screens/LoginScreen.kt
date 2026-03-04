@@ -58,7 +58,7 @@ fun LoginScreen(
             onClick = onSignUpClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(63.dp)
+                .height(56.dp)
                 .padding(top = 12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
         ) {
