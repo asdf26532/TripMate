@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 object Routes {
     const val LOGIN = "login"
+    const val SIGNUP = "signup"
     const val MAIN = "main"
 }
 sealed class BottomNavItem(

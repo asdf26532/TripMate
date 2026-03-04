@@ -15,7 +15,10 @@ import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
-fun LoginScreen(onLoginClick: () -> Unit) {
+fun LoginScreen(
+    onLoginClick: () -> Unit,
+    onSignUpClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,8 +51,20 @@ fun LoginScreen(onLoginClick: () -> Unit) {
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
         ) {
-            Text(text = "구글로 시작하기", fontSize = 18.sp, color = Color.White)
+            Text(text = "로그인", fontSize = 18.sp, color = Color.White)
         }
+        // 회원가입 버튼
+        Button(
+            onClick = onSignUpClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(63.dp)
+                .padding(top = 12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+        ) {
+            Text(text = "회원이 아니신가요? 회원가입", fontSize = 18.sp, color = Color.White)
+        }
+
     }
 }
 
@@ -57,6 +72,6 @@ fun LoginScreen(onLoginClick: () -> Unit) {
 @Composable
 fun LoginScreenPreview() {
     TripMateTheme {
-        LoginScreen(onLoginClick = {})
+        LoginScreen(onLoginClick = {}, onSignUpClick = {})
     }
 }
