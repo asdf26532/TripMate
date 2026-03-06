@@ -23,7 +23,7 @@ import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit,
+    onLoginClick: (String, String) -> Unit,
     onSignUpClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -82,7 +82,7 @@ fun LoginScreen(
 
         // 로그인 버튼
         Button(
-            onClick = onLoginClick,
+            onClick = {onLoginClick(email, password)},
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -134,6 +134,6 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     TripMateTheme {
-        LoginScreen(onLoginClick = {}, onSignUpClick = {})
+        LoginScreen(onLoginClick = {email, password ->}, onSignUpClick = {})
     }
 }

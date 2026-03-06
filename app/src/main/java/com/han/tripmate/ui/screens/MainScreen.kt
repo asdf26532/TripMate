@@ -9,11 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.theme.TripMateTheme
+import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
-fun MainScreen() {
+fun MainScreen(authViewModel: AuthViewModel) {
     // 현재 어떤 탭이 선택되었는지 관리하는 상태 (rememberSaveable 사용 추천)
     var selectedIndex by remember { mutableIntStateOf(0) }
 
@@ -56,11 +58,11 @@ fun MainScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopStart
         ) {
             // 선택된 인덱스에 따라 다른 화면(컴포저블)을 호출
             when (selectedIndex) {
-                0 -> HomeScreen()
+                0 -> HomeScreen(authViewModel = authViewModel)
                 1 -> ChattingScreen()
                 2 -> PlanScreen()
                 3 -> SettingsScreen()
@@ -83,6 +85,7 @@ fun SettingsScreen() { Text("설정 화면") }
 @Composable
 fun MainScreenPreview() {
     TripMateTheme {
-        MainScreen()
+        val mockViewModel: AuthViewModel = viewModel()
+        MainScreen(authViewModel = mockViewModel)
     }
 }

@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,13 +25,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
+import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(authViewModel: AuthViewModel) {
+
+    val user by authViewModel.currentUser.collectAsState()
 
     // 임시 데이터
     val serviceList = remember {
@@ -71,7 +77,7 @@ fun HomeScreen() {
         item {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
-                    text = "현지 전문가와 함께\n특별한 여행을 만들어보세요",
+                    text = "${user?.nickname ?: "회원" }님, 현지 전문가와 함께\n특별한 여행을 만들어보세요",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 32.sp,
@@ -242,6 +248,7 @@ fun ServiceListItem(service: TravelService) {
 @Composable
 fun HomeScreenPreview() {
     TripMateTheme {
-        HomeScreen()
+        val mockViewModel: AuthViewModel = viewModel()
+        HomeScreen(authViewModel = mockViewModel)
     }
 }
