@@ -28,12 +28,25 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
+import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
 fun HomeScreen(authViewModel: AuthViewModel) {
+
+    val user by authViewModel.currentUser.collectAsState()
+
+    if (user?.currentRole == UserRole.GUIDE) {
+        GuideDashboard()
+    } else {
+        TravelerHome(authViewModel)
+    }
+}
+
+@Composable
+fun TravelerHome(authViewModel: AuthViewModel) {
 
     val user by authViewModel.currentUser.collectAsState()
 
@@ -125,6 +138,57 @@ fun HomeScreen(authViewModel: AuthViewModel) {
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = Color.LightGray.copy(alpha = 0.2f))
+        }
+    }
+}
+
+@Composable
+fun GuideDashboard() {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "가이드 관리 센터",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        // 요약 카드 (수익, 예약 등)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DashboardCard("이번 달 수익", "₩ 1,250,000", Modifier.weight(1f))
+            DashboardCard("새 예약", "3건", Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 2. 서비스 관리 메뉴
+        Text(text = "내 서비스 관리", fontWeight = FontWeight.Bold)
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            ListItem(
+                headlineContent = { Text("파리 비즈니스 통역 서비스") },
+                supportingContent = { Text("현재 노출 중 · 평점 4.9") },
+                trailingContent = { Text("수정 >", color = Color.Gray) }
+            )
+        }
+
+        Button(
+            onClick = { /* 새 서비스 등록 */ },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("+ 새 여행 서비스 등록하기")
+        }
+    }
+}
+
+@Composable
+fun DashboardCard(title: String, value: String, modifier: Modifier = Modifier) {
+    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MainBlue.copy(alpha = 0.1f))) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = title, fontSize = 12.sp, color = MainBlue)
+            Text(text = value, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -244,11 +308,14 @@ fun ServiceListItem(service: TravelService) {
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     TripMateTheme {
         val mockViewModel: AuthViewModel = viewModel()
+        mockViewModel.login("test@trip.com")
+
         HomeScreen(authViewModel = mockViewModel)
     }
 }

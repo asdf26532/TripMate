@@ -16,7 +16,7 @@ class AuthViewModel : ViewModel() {
         _currentUser.value = User(
             id = "user_123",
             email = email,
-            nickname = "여행마스터",
+            nickname = "승환",
             isVerified = true
         )
     }
