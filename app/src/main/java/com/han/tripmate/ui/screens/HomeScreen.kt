@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.data.model.UserRole
@@ -34,21 +35,23 @@ import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
-fun HomeScreen(authViewModel: AuthViewModel) {
+fun HomeScreen(authViewModel: AuthViewModel,
+               navController: NavHostController) {
 
     val user by authViewModel.currentUser.collectAsState()
 
     if (user?.currentRole == UserRole.GUIDE) {
         GuideDashboard()
     } else {
-        TravelerHome(authViewModel)
+        TravelerHome(authViewModel, navController)
     }
 }
 
 @Composable
-fun TravelerHome(authViewModel: AuthViewModel) {
+fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController) {
 
     val user by authViewModel.currentUser.collectAsState()
+
 
     // 임시 데이터
     val serviceList = remember {
@@ -134,7 +137,13 @@ fun TravelerHome(authViewModel: AuthViewModel) {
         }
 
         items(serviceList) { service ->
-            ServiceListItem(service)
+            ServiceListItem(
+                service = service,
+                onItemClick = { id ->
+                    navController.navigate("detail/$id")
+                }
+            )
+
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = Color.LightGray.copy(alpha = 0.2f))
@@ -219,12 +228,12 @@ fun TravelCard(title: String) {
 }
 
 @Composable
-fun ServiceListItem(service: TravelService) {
+fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clickable { /* 상세 페이지로 이동 */ },
+            .clickable { onItemClick(service.id) },
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. 이미지 영역 (Coil 사용)

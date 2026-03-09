@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
@@ -62,7 +63,7 @@ fun MainScreen(authViewModel: AuthViewModel) {
         ) {
             // 선택된 인덱스에 따라 다른 화면(컴포저블)을 호출
             when (selectedIndex) {
-                0 -> HomeScreen(authViewModel = authViewModel)
+                0 -> HomeScreen(authViewModel = authViewModel, navController = navController)
                 1 -> ChattingScreen()
                 2 -> PlanScreen()
                 3 -> SettingsScreen()
