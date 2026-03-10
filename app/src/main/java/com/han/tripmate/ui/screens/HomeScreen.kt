@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.data.model.UserRole
@@ -324,7 +325,8 @@ fun HomeScreenPreview() {
     TripMateTheme {
         val mockViewModel: AuthViewModel = viewModel()
         mockViewModel.login("test@trip.com")
+        val mockNavController = rememberNavController()
 
-        HomeScreen(authViewModel = mockViewModel)
+        HomeScreen(authViewModel = mockViewModel, navController = mockNavController)
     }
 }

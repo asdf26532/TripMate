@@ -10,13 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
-fun MainScreen(authViewModel: AuthViewModel) {
+fun MainScreen(authViewModel: AuthViewModel, navController: NavHostController) {
     // 현재 어떤 탭이 선택되었는지 관리하는 상태 (rememberSaveable 사용 추천)
     var selectedIndex by remember { mutableIntStateOf(0) }
 
@@ -87,6 +88,8 @@ fun SettingsScreen() { Text("설정 화면") }
 fun MainScreenPreview() {
     TripMateTheme {
         val mockViewModel: AuthViewModel = viewModel()
-        MainScreen(authViewModel = mockViewModel)
+        val mockNavController = rememberNavController()
+
+        MainScreen(authViewModel = mockViewModel, navController = mockNavController)
     }
 }
