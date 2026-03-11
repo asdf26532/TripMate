@@ -58,6 +58,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
+    // DataStore (Preferences)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     // 2. Activity & Compose (안정적인 1.8.2 버전과 2024.02.00 BOM 사용)
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))

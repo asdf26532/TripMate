@@ -68,6 +68,12 @@ fun DetailScreen(serviceId: String, onBack: () -> Unit) {
                     lineHeight = 30.sp
                 )
 
+                Text(
+                    text = "상품번호: $serviceId",
+                    fontSize = 12.sp,
+                    color = Color.LightGray
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 가격 정보
@@ -95,7 +101,7 @@ fun DetailScreen(serviceId: String, onBack: () -> Unit) {
         // 상단 뒤로가기 버튼 (이미지 위에 띄우기)
         IconButton(
             onClick = onBack,
-            modifier = Modifier.padding(16.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            modifier = Modifier.padding(top = 30.dp, start = 16.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
         ) {
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = Color.White)
         }

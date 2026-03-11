@@ -307,8 +307,6 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
                 }
             }
         }
-
-        // 3. 하트 아이콘
         Icon(
             imageVector = Icons.Default.FavoriteBorder,
             contentDescription = null,
@@ -323,10 +321,12 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
 @Composable
 fun HomeScreenPreview() {
     TripMateTheme {
-        val mockViewModel: AuthViewModel = viewModel()
-        mockViewModel.login("test@trip.com")
-        val mockNavController = rememberNavController()
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val mockViewModel = AuthViewModel(context.applicationContext as android.app.Application)
 
+        mockViewModel.login("preview@test.com")
+
+        val mockNavController = rememberNavController()
         HomeScreen(authViewModel = mockViewModel, navController = mockNavController)
     }
 }
