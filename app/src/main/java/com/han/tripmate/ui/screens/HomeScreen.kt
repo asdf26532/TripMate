@@ -8,14 +8,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +50,7 @@ fun HomeScreen(authViewModel: AuthViewModel,
 fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController) {
 
     val user by authViewModel.currentUser.collectAsState()
-
+    var searchQuery by remember { mutableStateOf("") }
 
     // 임시 데이터
     val serviceList = remember {
@@ -85,6 +83,18 @@ fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController)
                 isVerified = true, tags = listOf("인생샷", "초보환영")
             )
         )
+    }
+
+    val filteredServices = remember(searchQuery, serviceList) {
+        if (searchQuery.isEmpty()) {
+            serviceList
+        } else {
+            serviceList.filter { service ->
+                service.title.contains(searchQuery, ignoreCase = true) ||
+                        service.location.contains(searchQuery, ignoreCase = true) ||
+                        service.category.contains(searchQuery, ignoreCase = true)
+            }
+        }
     }
 
     LazyColumn (
@@ -120,6 +130,43 @@ fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
+        }
+        // 검색
+        item {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("지역, 서비스, 가이드 검색") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "지우기")
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
+        items(filteredServices) { service ->
+            ServiceListItem(
+                service = service,
+                onItemClick = { id -> navController.navigate("detail/$id") }
+            )
+        }
+        if (filteredServices.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 50.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("검색 결과가 없습니다.", color = Color.Gray)
+                }
+            }
         }
 
         item {
@@ -315,7 +362,6 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
         )
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
