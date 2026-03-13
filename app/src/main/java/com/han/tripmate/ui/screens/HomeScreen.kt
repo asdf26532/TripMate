@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.*
 import androidx.compose.material.icons.filled.Search
@@ -32,9 +33,11 @@ import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
+import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun HomeScreen(authViewModel: AuthViewModel,
+               travelViewModel: TravelViewModel = viewModel(),
                navController: NavHostController) {
 
     val user by authViewModel.currentUser.collectAsState()
@@ -42,48 +45,21 @@ fun HomeScreen(authViewModel: AuthViewModel,
     if (user?.currentRole == UserRole.GUIDE) {
         GuideDashboard()
     } else {
-        TravelerHome(authViewModel, navController)
+        TravelerHome(authViewModel, travelViewModel, navController)
     }
 }
 
 @Composable
-fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController) {
+fun TravelerHome(
+    authViewModel: AuthViewModel,
+    travelViewModel: TravelViewModel = viewModel(),
+    navController: NavHostController
+) {
 
     val user by authViewModel.currentUser.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    // 임시 데이터
-    val serviceList = remember {
-        listOf(
-            TravelService(
-                id = "1", authorId = "expert_01",
-                title = "파리 비즈니스 전문 통역 및 VIP 의전 가이드 (벤츠 제공)",
-                location = "프랑스 파리", category = "비즈니스/통역",
-                price = 45000, priceUnit = "시간당",
-                rating = 4.9, reviewCount = 128,
-                thumbnailUrl = "https://images.unsplash.com/photo-1502602898657-3e91760cbb34", // 파리 예시 사진
-                isVerified = true, tags = listOf("통역전문", "차량지원")
-            ),
-            TravelService(
-                id = "2", authorId = "expert_02",
-                title = "도쿄 아키하바라 피규어&애니 투어 (현지인 단골샵 방문)",
-                location = "일본 도쿄", category = "테마투어",
-                price = 28000, priceUnit = "시간당",
-                rating = 4.8, reviewCount = 56,
-                thumbnailUrl = "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf", // 도쿄 예시 사진
-                tags = listOf("덕질여행", "맛집탐방")
-            ),
-            TravelService(
-                id = "3", authorId = "expert_03",
-                title = "다낭 미케비치 서핑 레슨 및 로컬 스냅 촬영",
-                location = "베트남 다낭", category = "액티비티",
-                price = 35000, priceUnit = "1회당",
-                rating = 5.0, reviewCount = 42,
-                thumbnailUrl = "https://images.unsplash.com/photo-1559592413-7ece3593e103", // 다낭 예시 사진
-                isVerified = true, tags = listOf("인생샷", "초보환영")
-            )
-        )
-    }
+    val serviceList by travelViewModel.services.collectAsState()
+    val favoriteIds by travelViewModel.favoriteIds.collectAsState()
 
     val filteredServices = remember(searchQuery, serviceList) {
         if (searchQuery.isEmpty()) {
@@ -155,6 +131,8 @@ fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController)
         items(filteredServices) { service ->
             ServiceListItem(
                 service = service,
+                isFavorite = favoriteIds.contains(service.id),
+                onFavoriteClick = { travelViewModel.toggleFavorite(service.id) },
                 onItemClick = { id -> navController.navigate("detail/$id") }
             )
         }
@@ -182,19 +160,6 @@ fun TravelerHome(authViewModel: AuthViewModel, navController: NavHostController)
                     color = Color.Gray
                 )
             }
-        }
-
-        items(serviceList) { service ->
-            ServiceListItem(
-                service = service,
-                onItemClick = { id ->
-                    navController.navigate("detail/$id")
-                }
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = Color.LightGray.copy(alpha = 0.2f))
         }
     }
 }
@@ -276,7 +241,12 @@ fun TravelCard(title: String) {
 }
 
 @Composable
-fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
+fun ServiceListItem(
+    service: TravelService,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
+    onItemClick: (String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -284,7 +254,7 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
             .clickable { onItemClick(service.id) },
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. 이미지 영역 (Coil 사용)
+        // 이미지 영역 (Coil 사용)
         AsyncImage(
             model = service.thumbnailUrl,
             contentDescription = null,
@@ -295,7 +265,7 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // 2. 정보 영역
+        // 정보 영역
         Column(modifier = Modifier.weight(1f)) {
             // 카테고리 & 위치
             Text(
@@ -354,11 +324,14 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
                 }
             }
         }
+        // 찜 아이콘
         Icon(
-            imageVector = Icons.Default.FavoriteBorder,
+            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
             contentDescription = null,
-            tint = Color.LightGray,
-            modifier = Modifier.size(20.dp)
+            tint = if (isFavorite) Color.Red else Color.LightGray,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onFavoriteClick() }
         )
     }
 }
@@ -367,12 +340,20 @@ fun ServiceListItem(service: TravelService, onItemClick: (String) -> Unit) {
 @Composable
 fun HomeScreenPreview() {
     TripMateTheme {
-        val context = androidx.compose.ui.platform.LocalContext.current
-        val mockViewModel = AuthViewModel(context.applicationContext as android.app.Application)
-
-        mockViewModel.login("preview@test.com")
-
         val mockNavController = rememberNavController()
-        HomeScreen(authViewModel = mockViewModel, navController = mockNavController)
+        Column {
+            Text("프리뷰 모드: UI 확인용", modifier = Modifier.padding(16.dp))
+            ServiceListItem(
+                service = TravelService(
+                    id = "1", authorId = "expert_01", title = "프리뷰 서비스", location = "서울",
+                    category = "가이드", price = 10000, priceUnit = "시간",
+                    rating = 4.5, reviewCount = 10, thumbnailUrl = "",
+                    isVerified = false, tags = listOf("태그1", "태그2")
+                ),
+                isFavorite = true,
+                onFavoriteClick = {},
+                onItemClick = {}
+            )
+        }
     }
 }
