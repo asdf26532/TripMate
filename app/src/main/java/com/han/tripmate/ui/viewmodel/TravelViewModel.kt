@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class TravelViewModel : ViewModel() {
-    // 실제로는 여기서 서버 데이터를 받아오겠지만, 지금은 임시 데이터를 담아둡니다.
     private val _services = MutableStateFlow(listOf(
         TravelService(
             id = "1", authorId = "expert_01",

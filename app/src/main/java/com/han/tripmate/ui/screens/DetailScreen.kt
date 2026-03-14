@@ -8,8 +8,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,21 +25,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.han.tripmate.ui.theme.MainBlue
+import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
-fun DetailScreen(serviceId: String, onBack: () -> Unit) {
+fun DetailScreen(
+    serviceId: String,
+    travelViewModel: TravelViewModel,
+    onBack: () -> Unit
+) {
+    val services by travelViewModel.services.collectAsState()
+    val favoriteIds by travelViewModel.favoriteIds.collectAsState()
+    val service = services.find { it.id == serviceId } ?: return
+    val isFavorite = favoriteIds.contains(serviceId)
 
     Scaffold(
         bottomBar = {
-            // 하단 고정 예약 버튼
-            Surface(shadowElevation = 8.dp) {
-                Button(
-                    onClick = { /* 예약 로직 */ },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp).height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+            Surface(
+                shadowElevation = 16.dp,
+                color = Color.White
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .navigationBarsPadding(), // 하단 시스템 바 겹침 방지
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("예약하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    //  왼쪽: 가격 정보
+                    Column {
+                        Text(text = "결제 금액", fontSize = 12.sp, color = Color.Gray)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = "${String.format("%,d", service.price)}원",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MainBlue
+                            )
+                            Text(text = " / ${service.priceUnit}", fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+
+                    // 오른쪽: 예약하기 버튼
+                    Button(
+                        onClick = { /* 예약 로직 */ },
+                        modifier = Modifier
+                            .width(180.dp) // 버튼 가로 크기 지정
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+                    ) {
+                        Text("예약하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -44,7 +85,7 @@ fun DetailScreen(serviceId: String, onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState()) // 스크롤
+                .verticalScroll(rememberScrollState())
         ) {
             //  큰 이미지 영역
             AsyncImage(
@@ -98,16 +139,36 @@ fun DetailScreen(serviceId: String, onBack: () -> Unit) {
             }
         }
 
-        // 상단 뒤로가기 버튼 (이미지 위에 띄우기)
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.padding(top = 30.dp, start = 16.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp, start = 5.dp, end = 16.dp), // statusBarsPadding 대신 여백 조정
+            horizontalArrangement = Arrangement.SpaceBetween // 양 끝으로 배치
         ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = Color.White)
+            // 상단 뒤로가기 버튼 (이미지 위에 띄우기)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.padding(top = 25.dp, start = 5.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = Color.White)
+            }
+
+            // 찜하기 버튼
+            IconButton(
+                onClick = { travelViewModel.toggleFavorite(serviceId) },
+                modifier = Modifier.padding(top = 25.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (isFavorite) Color.Red else Color.White
+                )
+            }
         }
     }
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun DetailScreenPreview() {
@@ -117,4 +178,4 @@ fun DetailScreenPreview() {
             onBack = {}
         )
     }
-}
+}*/

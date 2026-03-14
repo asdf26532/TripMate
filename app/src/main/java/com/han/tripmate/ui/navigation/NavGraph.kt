@@ -52,7 +52,11 @@ fun TripMateNavGraph(navController: NavHostController) {
             arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
         ) { backStackEntry ->
             val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
-            DetailScreen(serviceId = serviceId, onBack = { navController.popBackStack() })
+            DetailScreen(
+                serviceId = serviceId,
+                travelViewModel = viewModel(),
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.MAIN) {
