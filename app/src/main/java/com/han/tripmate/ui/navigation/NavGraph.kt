@@ -7,16 +7,19 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
 import com.han.tripmate.ui.screens.SignUpScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
+import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun TripMateNavGraph(navController: NavHostController) {
 
     val authViewModel : AuthViewModel = viewModel()
+    val travelViewModel: TravelViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -54,13 +57,24 @@ fun TripMateNavGraph(navController: NavHostController) {
             val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
             DetailScreen(
                 serviceId = serviceId,
-                travelViewModel = viewModel(),
-                onBack = { navController.popBackStack() }
+                travelViewModel = travelViewModel,
+                onBack = { navController.popBackStack() },
+                onChatClick = { guideId ->
+                    navController.navigate("chat_screen/$guideId")
+                }
             )
         }
 
+        composable(
+            route = Routes.CHAT_ROOM,
+            arguments = listOf(navArgument("guideId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val guideId = backStackEntry.arguments?.getString("guideId") ?: ""
+            ChatScreen(guideId = guideId, onBack = { navController.popBackStack() })
+        }
+
         composable(Routes.MAIN) {
-            MainScreen(authViewModel = authViewModel, navController = navController)
+            MainScreen(authViewModel = authViewModel, travelViewModel = travelViewModel, navController = navController)
         }
     }
 }

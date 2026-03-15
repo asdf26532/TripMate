@@ -31,7 +31,8 @@ import com.han.tripmate.ui.viewmodel.TravelViewModel
 fun DetailScreen(
     serviceId: String,
     travelViewModel: TravelViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onChatClick: (String) -> Unit
 ) {
     val services by travelViewModel.services.collectAsState()
     val favoriteIds by travelViewModel.favoriteIds.collectAsState()
@@ -66,16 +67,16 @@ fun DetailScreen(
                         }
                     }
 
-                    // 오른쪽: 예약하기 버튼
+                    // 오른쪽: 채팅하기 버튼
                     Button(
-                        onClick = { /* 예약 로직 */ },
+                        onClick = { onChatClick(service.authorId) },
                         modifier = Modifier
-                            .width(180.dp) // 버튼 가로 크기 지정
+                            .width(180.dp)
                             .height(56.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
                     ) {
-                        Text("예약하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text("채팅하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

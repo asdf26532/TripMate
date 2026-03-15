@@ -15,9 +15,14 @@ import androidx.navigation.compose.rememberNavController
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
+import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
-fun MainScreen(authViewModel: AuthViewModel, navController: NavHostController) {
+fun MainScreen(
+    authViewModel: AuthViewModel,
+    travelViewModel: TravelViewModel,
+    navController: NavHostController
+) {
     // 현재 어떤 탭이 선택되었는지 관리하는 상태 (rememberSaveable 사용 추천)
     var selectedIndex by remember { mutableIntStateOf(0) }
 
@@ -64,7 +69,7 @@ fun MainScreen(authViewModel: AuthViewModel, navController: NavHostController) {
         ) {
             // 선택된 인덱스에 따라 다른 화면(컴포저블)을 호출
             when (selectedIndex) {
-                0 -> HomeScreen(authViewModel = authViewModel, navController = navController)
+                0 -> HomeScreen(authViewModel = authViewModel, travelViewModel = travelViewModel, navController = navController)
                 1 -> ChattingScreen()
                 2 -> PlanScreen()
                 3 -> SettingsScreen()
@@ -88,8 +93,9 @@ fun SettingsScreen() { Text("설정 화면") }
 fun MainScreenPreview() {
     TripMateTheme {
         val mockViewModel: AuthViewModel = viewModel()
+        val mockTravelViewModel = TravelViewModel()
         val mockNavController = rememberNavController()
 
-        MainScreen(authViewModel = mockViewModel, navController = mockNavController)
+        MainScreen(authViewModel = mockViewModel, travelViewModel = mockTravelViewModel, navController = mockNavController)
     }
 }
