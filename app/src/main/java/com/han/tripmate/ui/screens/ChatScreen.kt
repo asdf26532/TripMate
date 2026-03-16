@@ -3,6 +3,8 @@ package com.han.tripmate.ui.screens
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,12 +20,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.han.tripmate.data.model.Message
 import com.han.tripmate.ui.theme.MainBlue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(guideId: String, onBack: () -> Unit) {
     var messageText by remember { mutableStateOf("") }
+    var messageList by remember { mutableStateOf(listOf<Message>()) }
 
     Scaffold(
         topBar = {
@@ -62,15 +70,32 @@ fun ChatScreen(guideId: String, onBack: () -> Unit) {
                     shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.LightGray)
                 )
-                TextButton(onClick = { /* 전송 */ }) {
-                    Text("전송", color = MainBlue, fontWeight = FontWeight.Bold)
+                TextButton(onClick = {
+                    if (messageText.isNotBlank()) {
+                        val newMessage = Message(
+                            id = UUID.randomUUID().toString(),
+                            senderId = "my_id",
+                            text = messageText,
+                            timestamp = SimpleDateFormat("HH:mm", Locale.KOREA).format(Date())
+                        )
+                        messageList = messageList + newMessage
+                        messageText = ""
+                    }
+                 }) {Text("전송", color = MainBlue, fontWeight = FontWeight.Bold)
                 }
             }
         }
     ) { innerPadding ->
-        // 대화 내용 영역
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize().background(Color(0xFFBBDEFB))) {
-            Text("가이드님과 대화를 시작해보세요!", modifier = Modifier.align(Alignment.Center))
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color(0xFFBACEE0)),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            items(messageList) { message ->
+                ChatBubble(message = message, isUser = message.senderId == "my_id")
+            }
         }
     }
 }
