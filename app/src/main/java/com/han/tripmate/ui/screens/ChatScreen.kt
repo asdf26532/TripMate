@@ -22,17 +22,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.han.tripmate.data.model.Message
 import com.han.tripmate.ui.theme.MainBlue
+import com.han.tripmate.ui.viewmodel.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(guideId: String, onBack: () -> Unit) {
-    var messageText by remember { mutableStateOf("") }
-    var messageList by remember { mutableStateOf(listOf<Message>()) }
-
+fun ChatScreen(
+    guideId: String,
+    viewModel: ChatViewModel = viewModel(),
+    onBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -63,25 +66,15 @@ fun ChatScreen(guideId: String, onBack: () -> Unit) {
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(4.dp))
                 OutlinedTextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
+                    value = viewModel.messageText,
+                    onValueChange = { viewModel.updateMessageText(it) },
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                     placeholder = { Text("메시지 입력") },
                     shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.LightGray)
                 )
-                TextButton(onClick = {
-                    if (messageText.isNotBlank()) {
-                        val newMessage = Message(
-                            id = UUID.randomUUID().toString(),
-                            senderId = "my_id",
-                            text = messageText,
-                            timestamp = SimpleDateFormat("HH:mm", Locale.KOREA).format(Date())
-                        )
-                        messageList = messageList + newMessage
-                        messageText = ""
-                    }
-                 }) {Text("전송", color = MainBlue, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { viewModel.sendMessage() }) {
+                    Text("전송", color = MainBlue, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -93,7 +86,7 @@ fun ChatScreen(guideId: String, onBack: () -> Unit) {
                 .background(Color(0xFFBACEE0)),
             contentPadding = PaddingValues(16.dp)
         ) {
-            items(messageList) { message ->
+            items(viewModel.messages) { message ->
                 ChatBubble(message = message, isUser = message.senderId == "my_id")
             }
         }
