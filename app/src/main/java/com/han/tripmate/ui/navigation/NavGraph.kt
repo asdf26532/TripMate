@@ -1,6 +1,9 @@
 package com.han.tripmate.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -17,9 +20,20 @@ import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun TripMateNavGraph(navController: NavHostController) {
-
     val authViewModel : AuthViewModel = viewModel()
     val travelViewModel: TravelViewModel = viewModel()
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            navController.navigate(Routes.MAIN) {
+                // 로그인이나 회원가입 화면을 백스택에서 완전히 제거
+                popUpTo(Routes.LOGIN) { inclusive = true }
+                popUpTo(Routes.SIGNUP) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -27,11 +41,9 @@ fun TripMateNavGraph(navController: NavHostController) {
     ) {
         composable(Routes.LOGIN) {
             LoginScreen(
+                authViewModel = authViewModel,
                 onLoginClick = { email, password ->
-                    authViewModel.login(email)
-                    navController.navigate(Routes.MAIN) {
-                    popUpTo(Routes.LOGIN) { inclusive = true } // 로그인 성공 시 백스택을 비워 뒤로가기 방지
-                }
+                    authViewModel.login(email, password)
             },
                 onSignUpClick = {
                     navController.navigate(Routes.SIGNUP)
@@ -41,8 +53,8 @@ fun TripMateNavGraph(navController: NavHostController) {
 
         composable(Routes.SIGNUP) {
             SignUpScreen(
-                onSignUpSuccess = {
-                    navController.popBackStack()
+                onSignUpSuccess = { email, password, nickname ->
+                    authViewModel.signUp(email, password, nickname)
                 },
                 onBack = {
                     navController.popBackStack()

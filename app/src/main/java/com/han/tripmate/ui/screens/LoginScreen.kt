@@ -15,20 +15,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.han.tripmate.ui.theme.MainBlue
-import com.han.tripmate.ui.theme.TripMateTheme
+import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
+    authViewModel: AuthViewModel,
     onLoginClick: (String, String) -> Unit,
     onSignUpClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val errorMessage by authViewModel.errorMessage.collectAsState()
+
+    // 에러 메시지
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            authViewModel.clearError()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -127,13 +139,5 @@ fun LoginScreen(
                 Text("Google 계정으로 로그인", color = Color.Black)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    TripMateTheme {
-        LoginScreen(onLoginClick = {email, password ->}, onSignUpClick = {})
     }
 }

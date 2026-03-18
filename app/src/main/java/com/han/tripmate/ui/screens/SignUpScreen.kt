@@ -18,15 +18,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.han.tripmate.ui.theme.MainBlue
-import com.han.tripmate.ui.theme.TripMateTheme
 
 @Composable
 fun SignUpScreen(
-    onSignUpSuccess: () -> Unit,
+    onSignUpSuccess: (String, String, String) -> Unit,
     onBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -109,7 +107,10 @@ fun SignUpScreen(
         }
 
         Button(
-            onClick = { onSignUpSuccess() },
+            onClick = {
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    onSignUpSuccess(email, password, nickname) }
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MainBlue),
@@ -121,13 +122,5 @@ fun SignUpScreen(
         TextButton(onClick = { onBack() }) {
             Text("취소하고 돌아가기", color = Color.Gray)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    TripMateTheme {
-        SignUpScreen( onSignUpSuccess = {}, onBack = {})
     }
 }

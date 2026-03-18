@@ -72,7 +72,6 @@ fun TravelerHome(
             }
         }
     }
-
     LazyColumn (
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 12.dp)
@@ -161,6 +160,14 @@ fun TravelerHome(
                 )
             }
         }
+    }
+    Button(
+        onClick = {
+            authViewModel.logout()
+        },
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text("로그아웃")
     }
 }
 
