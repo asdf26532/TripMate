@@ -40,24 +40,31 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 nickname = firebaseUser.displayName ?: "",
                 isVerified = true
             )
+            authRepository.getUserDetails(firebaseUser.uid) { data, error ->
+                if (data != null) {
+                    val nickname = data["nickname"] as? String ?: "여행자"
+                    val roleStr = data["role"] as? String ?: "USER"
+
+                    val role = if (roleStr == "GUIDE") UserRole.GUIDE else UserRole.USER
+
+                    _currentUser.value = _currentUser.value?.copy(
+                        nickname = nickname,
+                        currentRole = role
+                    )
+                }
+            }
         }
     }
 
     fun signUp(email: String, pw: String, nickname: String) {
         _isLoading.value = true
-        authRepository.signUp(email, pw) { success, error ->
+        _errorMessage.value = null
+
+        authRepository.signUp(email, pw, nickname) { success, error ->
             _isLoading.value = false
             if (success) {
-                val firebaseUser = authRepository.getCurrentUser()
-                val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
-                    displayName = nickname
-                }
-                firebaseUser?.updateProfile(profileUpdates)?.addOnCompleteListener {
-                    _isLoading.value = false
-                    checkSavedUser()
-                }
+                checkSavedUser()
             } else {
-                _isLoading.value = false
                 _errorMessage.value = error ?: "회원가입에 실패했습니다."
             }
         }
@@ -88,9 +95,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     // 모드 토글
     fun toggleRole(isGuide: Boolean) {
-        val current = _currentUser.value ?: return
-        val newRole = if (isGuide) UserRole.GUIDE else UserRole.USER
-        _currentUser.value = current.copy(currentRole = newRole)
+        val uid = _currentUser.value?.id ?: return
+        val newRole = if (isGuide) "GUIDE" else "USER"
+
+        _isLoading.value = true
+        // DB의 role 필드 업데이트
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("users").document(uid)
+            .update("role", newRole)
+            .addOnSuccessListener {
+                _isLoading.value = false
+                // 로컬 상태도 업데이트
+                val updatedRole = if (isGuide) UserRole.GUIDE else UserRole.USER
+                _currentUser.value = _currentUser.value?.copy(currentRole = updatedRole)
+            }
     }
 
     // 에러 메세지 초기화

@@ -1,36 +1,65 @@
 package com.han.tripmate.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     authViewModel: AuthViewModel,
     travelViewModel: TravelViewModel,
     navController: NavHostController
 ) {
-    // 현재 어떤 탭이 선택되었는지 관리하는 상태 (rememberSaveable 사용 추천)
+    val user by authViewModel.currentUser.collectAsState()
     var selectedIndex by remember { mutableIntStateOf(0) }
-
-    //  하단 탭 메뉴 리스트
     val items = BottomNavItem.items
 
-    // Scaffold: 상단바, 하단바 등 기본 레이아웃 뼈대
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "TripMate",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val isCurrentlyGuide = user?.currentRole == UserRole.GUIDE
+                        authViewModel.toggleRole(!isCurrentlyGuide)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.SwapHoriz,
+                            contentDescription = "모드 전환",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
         bottomBar = {
             // Material3 디자인의 표준 하단 네비게이션 바
             NavigationBar(
@@ -69,7 +98,17 @@ fun MainScreen(
         ) {
             // 선택된 인덱스에 따라 다른 화면(컴포저블)을 호출
             when (selectedIndex) {
-                0 -> HomeScreen(authViewModel = authViewModel, travelViewModel = travelViewModel, navController = navController)
+                0 -> {
+                    if (user?.currentRole == UserRole.GUIDE) {
+                        GuideDashboardScreen() // 가이드 전용 대시보드 (추후 구현)
+                    } else {
+                        HomeScreen(
+                            authViewModel = authViewModel,
+                            travelViewModel = travelViewModel,
+                            navController = navController
+                        )
+                    }
+                }
                 1 -> ChattingScreen()
                 2 -> PlanScreen()
                 3 -> SettingsScreen()
@@ -78,7 +117,18 @@ fun MainScreen(
     }
 }
 
-// 임시 화면 (에러 방지용)
+// 임시 화면
+@Composable
+fun GuideDashboardScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("👨‍✈️ 가이드 전용 대시보드", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("등록한 여행 상품 및 예약 현황을 관리하세요.")
+        }
+    }
+}
+
 @Composable
 fun ChattingScreen() { Text("채팅 목록") }
 

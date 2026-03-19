@@ -1,5 +1,10 @@
 package com.han.tripmate.data.model
 
+enum class UserRole {
+    USER,   // 일반
+    GUIDE   // 가이드
+}
+
 data class User(
     val id : String = "",
     val email : String = "",
@@ -9,8 +14,4 @@ data class User(
     val currentRole : UserRole = UserRole.USER
 )
 
-enum class UserRole {
-    USER,   // 일반
-    GUIDE   // 가이드
-}
 
