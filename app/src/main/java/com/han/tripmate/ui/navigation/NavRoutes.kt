@@ -12,6 +12,7 @@ object Routes {
     const val SIGNUP = "signup"
     const val MAIN = "main"
     const val DETAIL = "detail/{serviceId}"
+    const val ADD_SERVICE = "add_service"
     const val CHAT_ROOM = "chat_screen/{guideId}"
 }
 sealed class BottomNavItem(

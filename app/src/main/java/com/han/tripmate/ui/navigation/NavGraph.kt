@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.han.tripmate.ui.screens.AddServiceScreen
 import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.LoginScreen
@@ -74,6 +75,14 @@ fun TripMateNavGraph(navController: NavHostController) {
                 onChatClick = { guideId ->
                     navController.navigate("chat_screen/$guideId")
                 }
+            )
+        }
+
+        composable(route = Routes.ADD_SERVICE) {
+            AddServiceScreen(
+                authViewModel = authViewModel,
+                travelViewModel = travelViewModel,
+                navController = navController
             )
         }
 

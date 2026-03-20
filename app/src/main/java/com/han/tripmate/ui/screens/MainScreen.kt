@@ -1,27 +1,19 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.navigation.BottomNavItem
-import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     authViewModel: AuthViewModel,
@@ -33,33 +25,6 @@ fun MainScreen(
     val items = BottomNavItem.items
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "TripMate",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        val isCurrentlyGuide = user?.currentRole == UserRole.GUIDE
-                        authViewModel.toggleRole(!isCurrentlyGuide)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.SwapHoriz,
-                            contentDescription = "모드 전환",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
         bottomBar = {
             // Material3 디자인의 표준 하단 네비게이션 바
             NavigationBar(
@@ -100,7 +65,7 @@ fun MainScreen(
             when (selectedIndex) {
                 0 -> {
                     if (user?.currentRole == UserRole.GUIDE) {
-                        GuideDashboardScreen() // 가이드 전용 대시보드 (추후 구현)
+                        GuideDashboardScreen()
                     } else {
                         HomeScreen(
                             authViewModel = authViewModel,
@@ -111,7 +76,10 @@ fun MainScreen(
                 }
                 1 -> ChattingScreen()
                 2 -> PlanScreen()
-                3 -> SettingsScreen()
+                3 -> SettingsScreen(
+                    authViewModel = authViewModel,
+                    navController = navController
+                )
             }
         }
     }
@@ -135,17 +103,3 @@ fun ChattingScreen() { Text("채팅 목록") }
 @Composable
 fun PlanScreen() { Text("내 일정 목록") }
 
-@Composable
-fun SettingsScreen() { Text("설정 화면") }
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    TripMateTheme {
-        val mockViewModel: AuthViewModel = viewModel()
-        val mockTravelViewModel = TravelViewModel()
-        val mockNavController = rememberNavController()
-
-        MainScreen(authViewModel = mockViewModel, travelViewModel = mockTravelViewModel, navController = mockNavController)
-    }
-}

@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -46,6 +48,25 @@ fun HomeScreen(authViewModel: AuthViewModel,
         GuideDashboard()
     } else {
         TravelerHome(authViewModel, travelViewModel, navController)
+    }
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("add_service") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier.offset(y = 50.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "가이드 등록")
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End // 오른쪽 하단 배치
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            TravelerHome(authViewModel, travelViewModel, navController)
+        }
     }
 }
 
@@ -160,14 +181,6 @@ fun TravelerHome(
                 )
             }
         }
-    }
-    Button(
-        onClick = {
-            authViewModel.logout()
-        },
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text("로그아웃")
     }
 }
 

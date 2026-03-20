@@ -13,10 +13,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 
 @Composable
-fun SettingsScreen(authViewModel: AuthViewModel) {
+fun SettingsScreen(
+    authViewModel: AuthViewModel,
+    navController: NavHostController
+) {
     val user by authViewModel.currentUser.collectAsState()
 
     Column(
@@ -61,8 +65,15 @@ fun SettingsScreen(authViewModel: AuthViewModel) {
         Spacer(modifier = Modifier.weight(1f))
 
         // 로그아웃 버튼
-        TextButton(onClick = { authViewModel.logout() }) {
-            Text("로그아웃", color = Color.Red)
+        TextButton(onClick = {
+            authViewModel.logout()
+            navController.navigate("login") {
+                popUpTo("main") { inclusive = true }
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor= Color(0xFFF44336))
+        ) {
+            Text("로그아웃", color = Color.White)
         }
     }
 
