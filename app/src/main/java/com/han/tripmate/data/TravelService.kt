@@ -10,6 +10,7 @@ data class TravelService(
     val category: String = "",
     val price: Long = 0L,
     val priceUnit: String = "시간당",
+    val description: String = "",
     val rating: Double = 0.0,
     val reviewCount: Int = 0,
     val thumbnailUrl: String = "",
