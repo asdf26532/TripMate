@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.han.tripmate.ui.screens.AddServiceScreen
+import com.han.tripmate.ui.screens.ChatPreviewScreen
 import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.LoginScreen
@@ -84,6 +85,10 @@ fun TripMateNavGraph(navController: NavHostController) {
                 travelViewModel = travelViewModel,
                 navController = navController
             )
+        }
+
+        composable(BottomNavItem.Chatting.route) {
+            ChatPreviewScreen(navController)
         }
 
         composable(
