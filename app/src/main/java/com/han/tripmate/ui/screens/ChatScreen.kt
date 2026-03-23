@@ -36,6 +36,13 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
     onBack: () -> Unit
 ) {
+    val myId = "temp_user_id"
+    val chatRoomId = "room_${myId}_${guideId}"
+
+    LaunchedEffect(chatRoomId) {
+        viewModel.observeMessages(chatRoomId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

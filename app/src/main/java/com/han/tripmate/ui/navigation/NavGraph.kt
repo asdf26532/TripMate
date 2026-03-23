@@ -87,16 +87,19 @@ fun TripMateNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(BottomNavItem.Chatting.route) {
-            ChatPreviewScreen(navController)
-        }
-
         composable(
             route = Routes.CHAT_ROOM,
             arguments = listOf(navArgument("guideId") { type = NavType.StringType })
         ) { backStackEntry ->
             val guideId = backStackEntry.arguments?.getString("guideId") ?: ""
-            ChatScreen(guideId = guideId, onBack = { navController.popBackStack() })
+            ChatScreen(
+                guideId = guideId,
+                onBack = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.MAIN) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Routes.MAIN) {

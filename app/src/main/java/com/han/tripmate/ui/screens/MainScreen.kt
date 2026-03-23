@@ -74,7 +74,7 @@ fun MainScreen(
                         )
                     }
                 }
-                1 -> ChatPreviewScreen()
+                1 -> ChatPreviewScreen(navController = navController)
                 2 -> PlanScreen()
                 3 -> SettingsScreen(
                     authViewModel = authViewModel,
@@ -96,9 +96,6 @@ fun GuideDashboardScreen() {
         }
     }
 }
-
-@Composable
-fun ChatPreviewScreen() { Text("채팅 목록") }
 
 @Composable
 fun PlanScreen() { Text("내 일정 목록") }
