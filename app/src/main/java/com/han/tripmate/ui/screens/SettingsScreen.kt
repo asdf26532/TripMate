@@ -1,80 +1,139 @@
 package com.han.tripmate.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import com.han.tripmate.ui.viewmodel.AuthViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen() {
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("설정", fontWeight = FontWeight.Bold) }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // 프로필
+            item {
+                ProfileSection()
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+            }
+
+            // 일반 설정
+            item {
+                SettingHeader("일반")
+                SettingItem(icon = Icons.Default.Notifications, title = "알림 설정")
+                SettingItem(icon = Icons.Default.Lock, title = "개인정보 및 보안")
+                SettingItem(icon = Icons.Default.Palette, title = "테마 설정", subtitle = "시스템 기본값")
+            }
+
+            // 앱 정보 섹션
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SettingHeader("정보")
+                SettingItem(icon = Icons.Default.Info, title = "버전 정보", subtitle = "1.0.0 (Latest)")
+                SettingItem(icon = Icons.Default.Description, title = "오픈소스 라이선스")
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "com.han.tripmate",
+                        fontSize = 12.sp,
+                        color = Color.LightGray
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
-fun SettingsScreen(
-    authViewModel: AuthViewModel,
-    navController: NavHostController
-) {
-    val user by authViewModel.currentUser.collectAsState()
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+fun ProfileSection() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // 프로필 영역
+        // 임시 프로필 이미지 아이콘
         Surface(
-            modifier = Modifier.size(80.dp).clip(CircleShape),
-            color = Color.LightGray
+            modifier = Modifier.size(60.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
         ) {
-            // 프로필 이미지 처리
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(text = user?.nickname ?: "사용자", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Text(text = user?.email ?: "이메일 정보 없음", fontSize = 14.sp, color = Color.Gray)
-
-        Spacer(modifier = Modifier.height(32.dp))
-        HorizontalDivider()
-
-        // 가이드 모드
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = "가이드 모드로 사용", fontWeight = FontWeight.Bold)
-                Text(text = "내가 등록한 여행 서비스를 관리=", fontSize = 12.sp, color = Color.Gray)
-            }
-            Switch(
-                checked = user?.currentRole == com.han.tripmate.data.model.UserRole.GUIDE,
-                onCheckedChange = { isGuide ->
-                    // 뷰모델에 역할 변경 요청
-                    authViewModel.toggleRole(isGuide)
-                }
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.padding(12.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // 로그아웃 버튼
-        TextButton(onClick = {
-            authViewModel.logout()
-            navController.navigate("login") {
-                popUpTo("main") { inclusive = true }
-            }
-        }, modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor= Color(0xFFF44336))
-        ) {
-            Text("로그아웃", color = Color.White)
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+            Text(text = "여행자님", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(text = "tripmate@example.com", fontSize = 14.sp, color = Color.Gray)
         }
     }
+}
 
+@Composable
+fun SettingHeader(title: String) {
+    Text(
+        text = title,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+fun SettingItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String? = null
+) {
+    ListItem(
+        modifier = Modifier.clickable { /* 클릭 시 이동 로직 */ },
+        headlineContent = { Text(title, fontSize = 16.sp) },
+        supportingContent = subtitle?.let { { Text(it, fontSize = 13.sp) } },
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.DarkGray,
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.LightGray
+            )
+        }
+    )
 }
