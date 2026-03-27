@@ -76,10 +76,7 @@ fun MainScreen(
                 }
                 1 -> ChatPreviewScreen(navController = navController)
                 2 -> PlanScreen()
-                3 -> SettingsScreen(
-                    authViewModel = authViewModel,
-                    navController = navController
-                )
+                3 -> SettingsScreen()
             }
         }
     }
