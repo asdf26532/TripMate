@@ -43,11 +43,6 @@ class SettingsViewModel : ViewModel() {
             profileImageUrl = downloadUri.toString()
             db.collection("users").document(uid).update("profileImage", profileImageUrl)
 
-            // Firebase Auth 프로필 정보 업데이트 (선택 사항)
-            val profileUpdates = com.google.firebase.auth.userProfileChangeRequest.Builder()
-                .setPhotoUri(downloadUri)
-                .build()
-            auth.currentUser?.updateProfile(profileUpdates)
         }
     }
 }
