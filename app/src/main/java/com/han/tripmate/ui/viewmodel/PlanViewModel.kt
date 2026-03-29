@@ -1,6 +1,8 @@
 package com.han.tripmate.ui.viewmodel
 
 import android.net.Uri
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
@@ -27,7 +29,7 @@ class PlanViewModel : ViewModel() {
         _plans.remove(plan)
     }
 
-    fun uploadPlanImage(planId: String, imageUri: Uri) {
+    fun uploadPlanImage(context: Context, planId: String, imageUri: Uri) {
         val storageRef = storage.reference.child("plans/$planId/${System.currentTimeMillis()}.jpg")
 
         // 파일 업로드
@@ -44,11 +46,14 @@ class PlanViewModel : ViewModel() {
                 db.collection("plans").document(planId)
                     .update("imageUrls", com.google.firebase.firestore.FieldValue.arrayUnion(downloadUrl.toString()))
                     .addOnSuccessListener {
-                        // 성공 시
+                        Toast.makeText(context, "인증샷이 성공적으로 업로드되었습니다", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "데이터 업데이트에 실패했습니다.", Toast.LENGTH_SHORT).show()
                     }
             }
             .addOnFailureListener {
-                // 실패시
+                Toast.makeText(context, "사진 업로드 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
     }
 }

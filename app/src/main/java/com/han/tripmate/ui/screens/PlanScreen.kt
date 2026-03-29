@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,15 +31,15 @@ import coil.compose.AsyncImage
 fun PlanScreen(planViewModel: PlanViewModel = viewModel()) {
 
     var showDialog by remember { mutableStateOf(false) }
-
     var selectedPlanIdForPhoto by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
             selectedPlanIdForPhoto?.let { id ->
-                planViewModel.uploadPlanImage(id, it)
+                planViewModel.uploadPlanImage(context, id, it)
             }
         }
     }
