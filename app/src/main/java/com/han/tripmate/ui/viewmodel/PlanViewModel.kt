@@ -2,12 +2,17 @@ package com.han.tripmate.ui.viewmodel
 
 import android.net.Uri
 import android.content.Context
+import android.location.Geocoder
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.han.tripmate.data.model.Plan
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class PlanViewModel : ViewModel() {
 
@@ -56,4 +61,22 @@ class PlanViewModel : ViewModel() {
                 Toast.makeText(context, "사진 업로드 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
     }
+
+    suspend fun getLatLngFromAddress(context: Context, address: String): LatLng? = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val geocoder = Geocoder(context, Locale.KOREA)
+            val addresses = geocoder.getFromLocationName(address, 1)
+
+            if (!addresses.isNullOrEmpty()) {
+                val location = addresses[0]
+                LatLng(location.latitude, location.longitude)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 }
