@@ -64,7 +64,7 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    // 사진 메시지 전송 (Storage -> Firestore)
+    // 이미지 업로드 및 전송
     fun uploadChatImage(context: Context, uri: Uri) {
         val uid = auth.currentUser?.uid ?: return
         val storageRef = storage.reference.child("chat_images/${System.currentTimeMillis()}.jpg")
