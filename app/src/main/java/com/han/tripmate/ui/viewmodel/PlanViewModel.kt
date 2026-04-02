@@ -6,11 +6,13 @@ import android.location.Geocoder
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.han.tripmate.data.model.Plan
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
@@ -76,6 +78,25 @@ class PlanViewModel : ViewModel() {
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    fun searchLocation(context: Context, query: String, onResult: (LatLng?) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.KOREA)
+                val addresses = geocoder.getFromLocationName(query, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val location = addresses[0]
+                    withContext(Dispatchers.Main) {
+                        onResult(LatLng(location.latitude, location.longitude))
+                    }
+                } else {
+                    withContext(Dispatchers.Main) { onResult(null) }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { onResult(null) }
+            }
         }
     }
 
