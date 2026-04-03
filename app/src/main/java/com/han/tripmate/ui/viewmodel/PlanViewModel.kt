@@ -4,7 +4,9 @@ import android.net.Uri
 import android.content.Context
 import android.location.Geocoder
 import android.widget.Toast
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
@@ -20,6 +22,11 @@ class PlanViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
+
+    private val _updateResult = mutableStateOf<String?>(null)
+    val updateResult: State<String?> = _updateResult
+
+    fun clearUpdateResult() { _updateResult.value = null }
 
     // 임시 데이터
     private val _plans = mutableStateListOf(
@@ -64,6 +71,19 @@ class PlanViewModel : ViewModel() {
             }
     }
 
+    fun updatePlanLocation(context: Context, planId: String, newLocation: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.collection("plans").document(planId)
+                .update("location", newLocation)
+                .addOnSuccessListener {
+                    _updateResult.value = "장소가 성공적으로 수정되었습니다."
+                }
+                .addOnFailureListener { e ->
+                    _updateResult.value = "수정 실패: ${e.message}"
+                }
+        }
+    }
+
     suspend fun getLatLngFromAddress(context: Context, address: String): LatLng? = withContext(Dispatchers.IO) {
         return@withContext try {
             val geocoder = Geocoder(context, Locale.KOREA)
@@ -72,9 +92,7 @@ class PlanViewModel : ViewModel() {
             if (!addresses.isNullOrEmpty()) {
                 val location = addresses[0]
                 LatLng(location.latitude, location.longitude)
-            } else {
-                null
-            }
+            } else null
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -83,21 +101,10 @@ class PlanViewModel : ViewModel() {
 
     fun searchLocation(context: Context, query: String, onResult: (LatLng?) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.KOREA)
-                val addresses = geocoder.getFromLocationName(query, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val location = addresses[0]
-                    withContext(Dispatchers.Main) {
-                        onResult(LatLng(location.latitude, location.longitude))
-                    }
-                } else {
-                    withContext(Dispatchers.Main) { onResult(null) }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { onResult(null) }
+            val latLng = getLatLngFromAddress(context, query)
+            withContext(Dispatchers.Main) {
+                onResult(latLng)
             }
         }
     }
-
 }
