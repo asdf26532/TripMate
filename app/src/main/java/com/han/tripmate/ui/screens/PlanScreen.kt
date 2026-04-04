@@ -2,6 +2,7 @@ package com.han.tripmate.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -28,7 +29,10 @@ import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlanScreen(planViewModel: PlanViewModel = viewModel()) {
+fun PlanScreen(
+    planViewModel: PlanViewModel = viewModel(),
+    onNavigateToMap: (String) -> Unit
+) {
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedPlanIdForPhoto by remember { mutableStateOf<String?>(null) }
@@ -75,7 +79,8 @@ fun PlanScreen(planViewModel: PlanViewModel = viewModel()) {
                         onAddPhotoClick = {
                             selectedPlanIdForPhoto = plan.id
                             galleryLauncher.launch("image/*")
-                        }
+                        },
+                        onItemClick = { onNavigateToMap(plan.id) }
                     )
                 }
             }
@@ -125,12 +130,14 @@ fun AddPlanDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> 
 @Composable
 fun PlanItem(
     plan: Plan,
-    onAddPhotoClick: () -> Unit
+    onAddPhotoClick: () -> Unit,
+    onItemClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onItemClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {

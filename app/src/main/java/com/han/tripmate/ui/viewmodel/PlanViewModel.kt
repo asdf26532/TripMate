@@ -28,6 +28,9 @@ class PlanViewModel : ViewModel() {
 
     fun clearUpdateResult() { _updateResult.value = null }
 
+    private val _allPlanLocations = mutableStateListOf<LatLng>()
+    val allPlanLocations: List<LatLng> = _allPlanLocations
+
     // 임시 데이터
     private val _plans = mutableStateListOf(
         Plan(title = "부산 도착", date = "2024-03-24", time = "10:00", location = "부산역"),
@@ -107,4 +110,17 @@ class PlanViewModel : ViewModel() {
             }
         }
     }
+
+    fun loadAllPlanCoordinates(context: Context, plans: List<Plan>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val coordinates = plans.mapNotNull { plan ->
+                getLatLngFromAddress(context, plan.location)
+            }
+            withContext(Dispatchers.Main) {
+                _allPlanLocations.clear()
+                _allPlanLocations.addAll(coordinates)
+            }
+        }
+    }
+
 }

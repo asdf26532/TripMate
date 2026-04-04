@@ -12,12 +12,14 @@ import androidx.navigation.NavHostController
 import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.navigation.BottomNavItem
 import com.han.tripmate.ui.viewmodel.AuthViewModel
+import com.han.tripmate.ui.viewmodel.PlanViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun MainScreen(
     authViewModel: AuthViewModel,
     travelViewModel: TravelViewModel,
+    planViewModel: PlanViewModel,
     navController: NavHostController
 ) {
     val user by authViewModel.currentUser.collectAsState()
@@ -75,7 +77,14 @@ fun MainScreen(
                     }
                 }
                 1 -> ChatPreviewScreen(navController = navController)
-                2 -> PlanScreen()
+                2 -> {
+                    PlanScreen(
+                        planViewModel = planViewModel,
+                        onNavigateToMap = { planId ->
+                            navController.navigate("plan_map/$planId")
+                        }
+                    )
+                }
                 3 -> SettingsScreen()
             }
         }
@@ -93,7 +102,4 @@ fun GuideDashboardScreen() {
         }
     }
 }
-
-@Composable
-fun PlanScreen() { Text("내 일정 목록") }
 

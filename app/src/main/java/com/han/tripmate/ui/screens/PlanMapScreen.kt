@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -28,7 +29,8 @@ import com.han.tripmate.ui.viewmodel.PlanViewModel
 
 @Composable
 fun PlanMapScreen(
-    plan: Plan,
+    currentPlan: Plan,
+    allPlans: List<Plan>,
     viewModel: PlanViewModel = viewModel(),
     onBack: () -> Unit
 ) {
@@ -37,8 +39,21 @@ fun PlanMapScreen(
     var targetLocation by remember { mutableStateOf(LatLng(37.5665, 126.9780)) } // 기본 서울
     var isLocationChanged by remember { mutableStateOf(false) }
 
+    val pathPoints = viewModel.allPlanLocations
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(targetLocation, 15f)
+    }
+
+    LaunchedEffect(allPlans) {
+        viewModel.loadAllPlanCoordinates(context, allPlans)
+    }
+
+    LaunchedEffect(currentPlan.location) {
+        val latLng = viewModel.getLatLngFromAddress(context, currentPlan.location)
+        if (latLng != null) {
+            targetLocation = latLng
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+        }
     }
 
     val updateMessage by viewModel.updateResult
@@ -69,17 +84,6 @@ fun PlanMapScreen(
         ))
     }
 
-    // 주소를 좌표로 변환
-    LaunchedEffect(plan.location) {
-        val latLng = viewModel.getLatLngFromAddress(context, plan.location)
-        if (latLng != null) {
-            targetLocation = latLng
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
-        } else {
-            Toast.makeText(context, "장소를 찾을 수 없어 기본 위치로 표시합니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -87,10 +91,27 @@ fun PlanMapScreen(
             properties = MapProperties(isMyLocationEnabled = true),
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
         ) {
+            pathPoints.forEachIndexed { index, latLng ->
+                Marker(
+                    state = MarkerState(position = latLng),
+                    title = allPlans.getOrNull(index)?.title ?: "장소",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                )
+            }
+
+            if (pathPoints.size >= 2) {
+                Polyline(
+                    points = pathPoints,
+                    color = Color(0xFF007AFF),
+                    width = 12f,
+                    geodesic = true
+                )
+            }
+
             Marker(
                 state = MarkerState(position = targetLocation),
-                title = if (!isLocationChanged) plan.title else "새로운 위치",
-                snippet = if (!isLocationChanged) plan.location else searchQuery
+                title = if (!isLocationChanged) currentPlan.title else "새로운 위치",
+                snippet = if (!isLocationChanged) currentPlan.location else searchQuery
             )
         }
 
@@ -145,9 +166,7 @@ fun PlanMapScreen(
             if (isLocationChanged) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = {
-                        viewModel.updatePlanLocation(context, plan.id, searchQuery)
-                    },
+                    onClick = { viewModel.updatePlanLocation(context, currentPlan.id, searchQuery) },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF)),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),

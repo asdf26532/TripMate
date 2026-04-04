@@ -16,14 +16,17 @@ import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
+import com.han.tripmate.ui.screens.PlanMapScreen
 import com.han.tripmate.ui.screens.SignUpScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
+import com.han.tripmate.ui.viewmodel.PlanViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun TripMateNavGraph(navController: NavHostController) {
     val authViewModel : AuthViewModel = viewModel()
     val travelViewModel: TravelViewModel = viewModel()
+    val planViewModel: PlanViewModel = viewModel()
 
     val currentUser by authViewModel.currentUser.collectAsState()
 
@@ -102,8 +105,29 @@ fun TripMateNavGraph(navController: NavHostController) {
             )
         }
 
+        composable(
+            route = Routes.PLAN_MAP,
+            arguments = listOf(navArgument("planId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val planId = backStackEntry.arguments?.getString("planId") ?: ""
+            val selectedPlan = planViewModel.plans.find { it.id == planId }
+
+            if (selectedPlan != null) {
+                PlanMapScreen(
+                    currentPlan = selectedPlan,
+                    allPlans = planViewModel.plans,
+                    viewModel = planViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+        }
+
         composable(Routes.MAIN) {
-            MainScreen(authViewModel = authViewModel, travelViewModel = travelViewModel, navController = navController)
+            MainScreen(
+                authViewModel = authViewModel,
+                travelViewModel = travelViewModel,
+                planViewModel = planViewModel,
+                navController = navController)
         }
     }
 }
