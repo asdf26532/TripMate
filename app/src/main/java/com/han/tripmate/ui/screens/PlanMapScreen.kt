@@ -48,11 +48,14 @@ fun PlanMapScreen(
         viewModel.loadAllPlanCoordinates(context, allPlans)
     }
 
-    LaunchedEffect(currentPlan.location) {
-        val latLng = viewModel.getLatLngFromAddress(context, currentPlan.location)
-        if (latLng != null) {
-            targetLocation = latLng
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+    LaunchedEffect(pathPoints, targetLocation, isLocationChanged) {
+        if (isLocationChanged) {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(targetLocation, 16f))
+        } else if (pathPoints.isNotEmpty()) {
+            val bounds = viewModel.calculateBounds(pathPoints)
+            bounds?.let {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(it, 150))
+            }
         }
     }
 
@@ -92,10 +95,25 @@ fun PlanMapScreen(
             uiSettings = MapUiSettings(myLocationButtonEnabled = true)
         ) {
             pathPoints.forEachIndexed { index, latLng ->
+                val isSelected = allPlans[index].id == currentPlan.id
                 Marker(
                     state = MarkerState(position = latLng),
-                    title = allPlans.getOrNull(index)?.title ?: "장소",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    title = allPlans[index].title,
+                    snippet = allPlans[index].location,
+                    icon = BitmapDescriptorFactory.defaultMarker(
+                        if (isSelected) BitmapDescriptorFactory.HUE_RED else BitmapDescriptorFactory.HUE_AZURE
+                    ),
+                    zIndex = if (isSelected) 1f else 0f
+                )
+            }
+
+            // 임시 마커
+            if (isLocationChanged) {
+                Marker(
+                    state = MarkerState(position = targetLocation),
+                    title = "변경할 위치",
+                    snippet = searchQuery,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
                 )
             }
 
@@ -107,19 +125,10 @@ fun PlanMapScreen(
                     geodesic = true
                 )
             }
-
-            Marker(
-                state = MarkerState(position = targetLocation),
-                title = if (!isLocationChanged) currentPlan.title else "새로운 위치",
-                snippet = if (!isLocationChanged) currentPlan.location else searchQuery
-            )
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .align(Alignment.TopCenter),
+            modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -150,8 +159,7 @@ fun PlanMapScreen(
                             viewModel.searchLocation(context, searchQuery) { resultLatLng ->
                                 if (resultLatLng != null) {
                                     targetLocation = resultLatLng
-                                    isLocationChanged = true // [수정] 여기서 true로 바꿔줘야 버튼이 나타납니다.
-                                    cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(resultLatLng, 16f))
+                                    isLocationChanged = true
                                 } else {
                                     Toast.makeText(context, "장소를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
                                 }
