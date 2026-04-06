@@ -2,6 +2,7 @@ package com.han.tripmate.ui.viewmodel
 
 import android.net.Uri
 import android.content.Context
+import android.content.Intent
 import android.location.Geocoder
 import android.widget.Toast
 import androidx.compose.runtime.State
@@ -129,6 +130,19 @@ class PlanViewModel : ViewModel() {
         val builder = LatLngBounds.Builder()
         locations.forEach { builder.include(it) }
         return builder.build()
+    }
+
+    fun openExternalMap(context: Context, label: String, lat: Double, lng: Double) {
+        val uriString = "geo:$lat,$lng?q=$lat,$lng($label)"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString))
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng")
+            val webIntent = Intent(Intent.ACTION_VIEW, webUri)
+            context.startActivity(webIntent)
+        }
     }
 
 }

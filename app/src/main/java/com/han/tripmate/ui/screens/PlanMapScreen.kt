@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -185,6 +186,28 @@ fun PlanMapScreen(
                     Text("이 위치로 일정 수정", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
+        }
+
+        ExtendedFloatingActionButton(
+            onClick = {
+                viewModel.openExternalMap(
+                    context = context,
+                    label = if (isLocationChanged) "검색된 위치" else currentPlan.title,
+                    lat = targetLocation.latitude,
+                    lng = targetLocation.longitude
+                )
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 32.dp, end = 16.dp),
+            containerColor = Color(0xFF007AFF),
+            contentColor = Color.White,
+            shape = RoundedCornerShape(16.dp),
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+        ) {
+            Icon(Icons.Default.Directions, contentDescription = "길찾기")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "길찾기", fontWeight = FontWeight.Bold)
         }
     }
 }
