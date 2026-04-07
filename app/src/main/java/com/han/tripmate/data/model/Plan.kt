@@ -9,5 +9,7 @@ data class Plan(
     val time: String,         // 시간
     val location: String,     // 장소 상세
     val isCompleted: Boolean = false, // 완료 여부
-    val imageUrls: List<String> = emptyList()   // 사진
+    val imageUrls: List<String> = emptyList(),   // 사진
+    val memo: String = "",      // 메모
+    val expense: Int = 0        // 지출
 )

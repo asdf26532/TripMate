@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +36,10 @@ fun PlanScreen(
 ) {
 
     var showDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var selectedPlanIdForPhoto by remember { mutableStateOf<String?>(null) }
+    var selectedPlanForEdit by remember { mutableStateOf<Plan?>(null) }
+
     val context = LocalContext.current
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -95,6 +99,17 @@ fun PlanScreen(
                 }
             )
         }
+
+        if (showEditDialog && selectedPlanForEdit != null) {
+            EditPlanDetailsDialog(
+                plan = selectedPlanForEdit!!,
+                onDismiss = { showEditDialog = false },
+                onConfirm = { memo, expense ->
+                    planViewModel.updatePlanDetails(selectedPlanForEdit!!.id, memo, expense)
+                    showEditDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -131,6 +146,7 @@ fun AddPlanDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> 
 fun PlanItem(
     plan: Plan,
     onAddPhotoClick: () -> Unit,
+    onEditClick: () -> Unit,
     onItemClick: () -> Unit
 ) {
     Card(
@@ -156,6 +172,30 @@ fun PlanItem(
                     Text(text = plan.time, fontSize = 12.sp, color = Color.Gray)
                     Text(text = plan.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(text = plan.location, fontSize = 14.sp, color = Color.DarkGray)
+
+                    if (plan.memo.isNotBlank() || plan.expense > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (plan.memo.isNotBlank()) {
+                                Text(
+                                    text = "📝 ${plan.memo}",
+                                    fontSize = 12.sp,
+                                    color = Color.Blue,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                            }
+                            if (plan.expense > 0) {
+                                Text(
+                                    text = "💰 ${plan.expense}원",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFFE91E63) // 핑크 계열
+                                )
+                            }
+                        }
+                    }
+                    IconButton(onClick = onEditClick) {
+                        Icon(Icons.Default.EditNote, contentDescription = "기록", tint = Color.Gray)
+                    }
                 }
                 // 일정 완료 체크박스
                 Checkbox(

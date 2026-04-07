@@ -145,4 +145,20 @@ class PlanViewModel : ViewModel() {
         }
     }
 
+    fun updatePlanDetails(planId: String, memo: String, expense: Int) {
+        val updates = mapOf(
+            "memo" to memo,
+            "expense" to expense
+        )
+
+        db.collection("plans").document(planId)
+            .update(updates)
+            .addOnSuccessListener {
+                _updateResult.value = "기록이 저장되었습니다."
+            }
+            .addOnFailureListener {
+                _updateResult.value = "저장에 실패했습니다."
+            }
+    }
+
 }
