@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +37,7 @@ fun PlanScreen(
     onNavigateToMap: (String) -> Unit
 ) {
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedPlanIdForPhoto by remember { mutableStateOf<String?>(null) }
     var selectedPlanForEdit by remember { mutableStateOf<Plan?>(null) }
@@ -60,7 +62,7 @@ fun PlanScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showDialog = true },
+                onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "추가", tint = Color.White)
@@ -84,18 +86,22 @@ fun PlanScreen(
                             selectedPlanIdForPhoto = plan.id
                             galleryLauncher.launch("image/*")
                         },
+                        onEditClick = {
+                            selectedPlanForEdit = plan
+                            showEditDialog = true
+                        },
                         onItemClick = { onNavigateToMap(plan.id) }
                     )
                 }
             }
         }
 
-        if (showDialog) {
+        if (showAddDialog) {
             AddPlanDialog(
-                onDismiss = { showDialog = false },
+                onDismiss = { showAddDialog= false },
                 onConfirm = { title, time, location ->
                     planViewModel.addPlan(Plan(title = title, time = time, location = location, date = "2024-03-25"))
-                    showDialog = false
+                    showAddDialog = false
                 }
             )
         }
@@ -112,35 +118,6 @@ fun PlanScreen(
         }
     }
 }
-
-@Composable
-fun AddPlanDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
-    var title by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("새 일정 추가", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("일정 제목") })
-                OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("시간 (예: 14:00)") })
-                OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("장소") })
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (title.isNotBlank()) onConfirm(title, time, location) },
-                enabled = title.isNotBlank()
-            ) { Text("추가") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("취소") }
-        }
-    )
-}
-
 
 @Composable
 fun PlanItem(
@@ -246,4 +223,69 @@ fun PlanItem(
             }
         }
     }
+}
+
+@Composable
+fun AddPlanDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
+    var title by remember { mutableStateOf("") }
+    var time by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("새 일정 추가", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("일정 제목") })
+                OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("시간 (예: 14:00)") })
+                OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("장소") })
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (title.isNotBlank()) onConfirm(title, time, location) },
+                enabled = title.isNotBlank()
+            ) { Text("추가") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("취소") }
+        }
+    )
+}
+
+@Composable
+fun EditPlanDetailsDialog(
+    plan: Plan,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Int) -> Unit
+) {
+    var memo by remember { mutableStateOf(plan.memo) }
+    var expense by remember { mutableStateOf(plan.expense.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("여행 기록하기", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = memo,
+                    onValueChange = { memo = it },
+                    label = { Text("메모") },
+                    placeholder = { Text("맛집 탐방 성공!") }
+                )
+                OutlinedTextField(
+                    value = expense,
+                    onValueChange = { if (it.all { c -> c.isDigit() }) expense = it },
+                    label = { Text("지출 금액 (원)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(memo, expense.toIntOrNull() ?: 0) }) { Text("저장") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("취소") }
+        }
+    )
 }
