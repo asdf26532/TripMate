@@ -16,6 +16,20 @@ class SettingsViewModel : ViewModel() {
     var profileImageUrl by mutableStateOf(auth.currentUser?.photoUrl?.toString())
         private set
 
+    var isNotificationsEnabled by mutableStateOf(true)
+        private set
+
+    var isDarkMode by mutableStateOf(false)
+        private set
+
+    fun toggleNotifications(enabled: Boolean) {
+        isNotificationsEnabled = enabled
+    }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        isDarkMode = enabled
+    }
+
     // 로그아웃
     fun signOut(onComplete: () -> Unit) {
         auth.signOut()
