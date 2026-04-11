@@ -31,6 +31,8 @@ fun SettingsScreen(
     onNavigateToLogin: () -> Unit
 ) {
     var showDetailDialog by remember { mutableStateOf<String?>(null) }
+    var showNameEditDialog by remember { mutableStateOf(false) }
+    var tempName by remember { mutableStateOf("") }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -56,8 +58,13 @@ fun SettingsScreen(
             // 프로필
             item {
                 ProfileCard(
+                    userName = viewModel.userName,
                     profileUrl = viewModel.profileImageUrl,
-                    onEditClick = { galleryLauncher.launch("image/*") }
+                    onEditClick = { galleryLauncher.launch("image/*") },
+                    onNameClick = {
+                        tempName = viewModel.userName
+                        showNameEditDialog = true
+                    }
                 )
             }
 
@@ -162,6 +169,36 @@ fun SettingsScreen(
         }
     }
 
+    // 이름 수정 다이얼로그
+    if (showNameEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showNameEditDialog = false },
+            title = { Text("이름 변경") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = tempName,
+                        onValueChange = { tempName = it },
+                        label = { Text("새 이름 입력") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (viewModel.errorMessage != null) {
+                        Text(viewModel.errorMessage!!, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.updateUserName(tempName) { showNameEditDialog = false } }) {
+                    Text("저장")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNameEditDialog = false; viewModel.clearError() }) { Text("취소") }
+            }
+        )
+    }
+
     // 상세 설정 클릭 시 팝업
     if (showDetailDialog != null) {
         AlertDialog(
@@ -176,59 +213,45 @@ fun SettingsScreen(
 }
 
 @Composable
-fun ProfileCard(profileUrl: String?, onEditClick: () -> Unit) {
+fun ProfileCard(
+    userName: String,
+    profileUrl: String?,
+    onEditClick: () -> Unit,
+    onNameClick: () -> Unit
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
     ) {
-        Row(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
-            ) {
-                if (profileUrl != null) {
-                    AsyncImage(
-                        model = profileUrl,
-                        contentDescription = null,
-                        modifier = Modifier.clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.padding(12.dp),
-                        tint = Color.White
-                    )
+        Row(modifier = Modifier.padding(24.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Surface(modifier = Modifier.size(64.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+                    if (profileUrl != null) {
+                        AsyncImage(model = profileUrl, contentDescription = null, modifier = Modifier.clip(CircleShape), contentScale = ContentScale.Crop)
+                    } else {
+                        Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.padding(12.dp), tint = Color.White)
+                    }
+                }
+                Surface(
+                    onClick = onEditClick,
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.padding(4.dp), tint = Color.White)
                 }
             }
 
             Column(modifier = Modifier.padding(start = 20.dp)) {
-                Text(text = "여행자님", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                Text(text = "tripmate@example.com", fontSize = 14.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.height(10.dp))
-                Surface(
-                    onClick = onEditClick,
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onNameClick() }
                 ) {
-                    Text(
-                        text = "프로필 수정",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Text(text = "${userName}님", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp).padding(start = 4.dp), tint = Color.Gray)
                 }
+                Text(text = "나의 프로필 정보 수정", fontSize = 14.sp, color = Color.Gray)
             }
         }
     }

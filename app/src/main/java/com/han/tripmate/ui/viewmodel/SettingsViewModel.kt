@@ -16,11 +16,51 @@ class SettingsViewModel : ViewModel() {
     var profileImageUrl by mutableStateOf(auth.currentUser?.photoUrl?.toString())
         private set
 
+    var userName by mutableStateOf(auth.currentUser?.displayName ?: "여행자")
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
     var isNotificationsEnabled by mutableStateOf(true)
         private set
 
     var isDarkMode by mutableStateOf(false)
         private set
+
+    init {
+        loadUserData()
+    }
+
+    private fun loadUserData() {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                errorMessage = "데이터를 불러오는데 실패했습니다."
+                return@addSnapshotListener
+            }
+            if (snapshot != null && snapshot.exists()) {
+                snapshot.getString("name")?.let { userName = it }
+                snapshot.getString("profileImage")?.let { profileImageUrl = it }
+            }
+        }
+    }
+
+    fun updateUserName(newName: String, onComplete: () -> Unit) {
+        val uid = auth.currentUser?.uid ?: return
+        errorMessage = null
+
+        db.collection("users").document(uid).update("name", newName)
+            .addOnSuccessListener {
+                userName = newName
+                onComplete()
+            }
+            .addOnFailureListener { e ->
+                errorMessage = "이름 업데이트 실패: ${e.localizedMessage}"
+            }
+    }
+
+    fun clearError() { errorMessage = null }
 
     fun toggleNotifications(enabled: Boolean) {
         isNotificationsEnabled = enabled
