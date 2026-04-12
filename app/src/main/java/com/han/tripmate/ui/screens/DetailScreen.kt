@@ -169,14 +169,3 @@ fun DetailScreen(
     }
 }
 
-/*
-@Preview(showBackground = true)
-@Composable
-fun DetailScreenPreview() {
-    TripMateTheme {
-        DetailScreen(
-            serviceId = "1",
-            onBack = {}
-        )
-    }
-}*/

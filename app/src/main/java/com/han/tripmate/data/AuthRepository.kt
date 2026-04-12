@@ -69,4 +69,13 @@ class AuthRepository {
 
     // 현재 로그인된 사용자가 있는지 확인
     fun getCurrentUser() = auth.currentUser
+
+    fun updateUserRole(uid: String, isGuide: Boolean, onResult: (Boolean) -> Unit) {
+        val newRole = if (isGuide) "GUIDE" else "USER"
+        db.collection("users").document(uid)
+            .update("role", newRole)
+            .addOnSuccessListener { onResult(true) }
+            .addOnFailureListener { onResult(false) }
+    }
+
 }

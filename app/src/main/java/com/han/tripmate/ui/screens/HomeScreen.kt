@@ -355,25 +355,3 @@ fun ServiceListItem(
         )
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    TripMateTheme {
-        val mockNavController = rememberNavController()
-        Column {
-            Text("프리뷰 모드: UI 확인용", modifier = Modifier.padding(16.dp))
-            ServiceListItem(
-                service = TravelService(
-                    id = "1", authorId = "expert_01", title = "프리뷰 서비스", location = "서울",
-                    category = "가이드", price = 10000, priceUnit = "시간",
-                    rating = 4.5, reviewCount = 10, thumbnailUrl = "",
-                    isVerified = false, tags = listOf("태그1", "태그2")
-                ),
-                isFavorite = true,
-                onFavoriteClick = {},
-                onItemClick = {}
-            )
-        }
-    }
-}

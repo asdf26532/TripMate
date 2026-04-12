@@ -96,19 +96,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // 모드 토글
     fun toggleRole(isGuide: Boolean) {
         val uid = _currentUser.value?.id ?: return
-        val newRole = if (isGuide) "GUIDE" else "USER"
-
         _isLoading.value = true
-        // DB의 role 필드 업데이트
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            .collection("users").document(uid)
-            .update("role", newRole)
-            .addOnSuccessListener {
-                _isLoading.value = false
-                // 로컬 상태도 업데이트
+
+        authRepository.updateUserRole(uid, isGuide) { success ->
+            _isLoading.value = false
+            if (success) {
                 val updatedRole = if (isGuide) UserRole.GUIDE else UserRole.USER
                 _currentUser.value = _currentUser.value?.copy(currentRole = updatedRole)
+            } else {
+                _errorMessage.value = "모드 전환에 실패했습니다. 다시 시도해주세요."
             }
+        }
     }
 
     // 에러 메세지 초기화
