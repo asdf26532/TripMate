@@ -2,13 +2,18 @@ package com.han.tripmate.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.han.tripmate.data.TravelService
+import com.han.tripmate.data.model.TravelRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class TravelViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
+
+    private val repository = TravelRepository()
+    private var serviceListener: ListenerRegistration? = null
 
     private val _services = MutableStateFlow<List<TravelService>>(emptyList())
     val services: StateFlow<List<TravelService>> = _services.asStateFlow()
@@ -18,6 +23,10 @@ class TravelViewModel : ViewModel() {
 
     init {
         fetchServices()
+
+        serviceListener = repository.observeServices { list ->
+            _services.value = list
+        }
     }
 
     private fun fetchServices() {
@@ -35,10 +44,12 @@ class TravelViewModel : ViewModel() {
     }
 
     fun addService(service: TravelService, onComplete: (Boolean) -> Unit) {
-        db.collection("travel_services")
-            .add(service)
-            .addOnSuccessListener { onComplete(true) }
-            .addOnFailureListener { onComplete(false) }
+        repository.addService(service, onComplete)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        serviceListener?.remove()
     }
 
     fun toggleFavorite(serviceId: String) {
