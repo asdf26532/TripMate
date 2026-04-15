@@ -1,9 +1,8 @@
-package com.han.tripmate.data.model
+package com.han.tripmate.data
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
-import com.han.tripmate.data.TravelService
 
 class TravelRepository {
     private val db = FirebaseFirestore.getInstance()

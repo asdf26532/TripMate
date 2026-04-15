@@ -9,16 +9,13 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
-import com.han.tripmate.data.model.ImageRepository
+import com.han.tripmate.data.ImageRepository
 import com.han.tripmate.data.model.Message
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 
 class ChatViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
-    private val storage = FirebaseStorage.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private val imageRepository = ImageRepository()
 

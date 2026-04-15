@@ -3,15 +3,19 @@ package com.han.tripmate.ui.viewmodel
 import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.tasks.await
+import com.han.tripmate.data.ImageRepository
+import com.han.tripmate.data.UserRepository
+import kotlinx.coroutines.launch
 
 class SettingsViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+
+    private val imageRepository = ImageRepository()
+    private val userRepository = UserRepository()
 
     var profileImageUrl by mutableStateOf(auth.currentUser?.photoUrl?.toString())
         private set
@@ -26,6 +30,9 @@ class SettingsViewModel : ViewModel() {
         private set
 
     var isDarkMode by mutableStateOf(false)
+        private set
+
+    var isUpdating by mutableStateOf(false)
         private set
 
     init {
@@ -44,20 +51,6 @@ class SettingsViewModel : ViewModel() {
                 snapshot.getString("profileImage")?.let { profileImageUrl = it }
             }
         }
-    }
-
-    fun updateUserName(newName: String, onComplete: () -> Unit) {
-        val uid = auth.currentUser?.uid ?: return
-        errorMessage = null
-
-        db.collection("users").document(uid).update("name", newName)
-            .addOnSuccessListener {
-                userName = newName
-                onComplete()
-            }
-            .addOnFailureListener { e ->
-                errorMessage = "이름 업데이트 실패: ${e.localizedMessage}"
-            }
     }
 
     fun clearError() { errorMessage = null }
@@ -84,19 +77,35 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
-    // 프로필 이미지 업로드 (Storage -> Firestore -> Auth)
+    // 프로필 이미지
     fun uploadProfileImage(uri: Uri) {
         val uid = auth.currentUser?.uid ?: return
-        val ref = storage.reference.child("profiles/$uid.jpg")
 
-        ref.putFile(uri).continueWithTask { task ->
-            if (!task.isSuccessful) task.exception?.let { throw it }
-            ref.downloadUrl
-        }.addOnSuccessListener { downloadUri ->
-            // Firestore 업데이트 및 UI 반영
-            profileImageUrl = downloadUri.toString()
-            db.collection("users").document(uid).update("profileImage", profileImageUrl)
+        viewModelScope.launch {
+            isUpdating = true
+            val path = "profiles/$uid.jpg"
+            val downloadUrl = imageRepository.uploadImage(path, uri)
 
+            if (downloadUrl != null) {
+                val success = userRepository.updateProfile(uid, mapOf("profileImage" to downloadUrl))
+                if (success) profileImageUrl = downloadUrl
+            }
+            isUpdating = false
         }
     }
+
+    fun updateUserName(newName: String, onComplete: () -> Unit) {
+        val uid = auth.currentUser?.uid ?: return
+
+        viewModelScope.launch {
+            isUpdating = true
+            val success = userRepository.updateProfile(uid, mapOf("name" to newName))
+            if (success) {
+                userName = newName
+                onComplete()
+            }
+            isUpdating = false
+        }
+    }
+
 }
