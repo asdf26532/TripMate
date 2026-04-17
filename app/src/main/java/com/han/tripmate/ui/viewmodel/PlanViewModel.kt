@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import com.han.tripmate.ui.util.UiState
 
 class PlanViewModel : ViewModel() {
 
@@ -31,8 +32,8 @@ class PlanViewModel : ViewModel() {
     private val imageRepository = ImageRepository()
     private val auth = FirebaseAuth.getInstance()
 
-    private val _updateResult = mutableStateOf<String?>(null)
-    val updateResult: State<String?> = _updateResult
+    private val _uiState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val uiState: StateFlow<UiState<String>> = _uiState.asStateFlow()
 
     private val _plans = MutableStateFlow<List<Plan>>(emptyList())
     val plans: StateFlow<List<Plan>> = _plans.asStateFlow()
@@ -51,6 +52,8 @@ class PlanViewModel : ViewModel() {
         }
     }
 
+    fun resetUiState() { _uiState.value = UiState.Idle }
+
     fun addPlan(plan: Plan) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -61,8 +64,9 @@ class PlanViewModel : ViewModel() {
         }
     }
 
-    fun uploadPlanImage(context: Context, planId: String, imageUri: Uri) {
+    fun uploadPlanImage(planId: String, imageUri: Uri) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val path = "plans/$planId/${System.currentTimeMillis()}.jpg"
             val downloadUrl = imageRepository.uploadImage(path, imageUri)
 
@@ -72,32 +76,40 @@ class PlanViewModel : ViewModel() {
                     mapOf("imageUrls" to FieldValue.arrayUnion(downloadUrl))
                 )
                 if (success) {
-                    Toast.makeText(context, "인증샷이 업로드되었습니다.", Toast.LENGTH_SHORT).show()
+                    _uiState.value = UiState.Success("인증샷이 성공적으로 업로드되었습니다.")
+                } else {
+                    _uiState.value = UiState.Error("데이터 업데이트 실패")
                 }
             } else {
-                Toast.makeText(context, "사진 업로드에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                _uiState.value = UiState.Error("이미지 업로드 실패")
             }
         }
     }
 
-    fun updatePlanLocation(context: Context, planId: String, newLocation: String) {
+    fun updatePlanLocation(planId: String, newLocation: String) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val success = planRepository.updatePlanDetails(planId, mapOf("location" to newLocation))
             if (success) {
-                _updateResult.value = "장소가 성공적으로 수정되었습니다."
+                _uiState.value = UiState.Success("장소가 수정되었습니다.")
             } else {
-                _updateResult.value = "수정 실패"
+                _uiState.value = UiState.Error("장소 수정 실패")
             }
         }
     }
 
     fun updatePlanDetails(planId: String, memo: String, expense: Int) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val success = planRepository.updatePlanDetails(
                 planId,
                 mapOf("memo" to memo, "expense" to expense)
             )
-            _updateResult.value = if (success) "기록이 저장되었습니다." else "저장에 실패했습니다."
+            if (success) {
+                _uiState.value = UiState.Success("기록이 저장되었습니다.")
+            } else {
+                _uiState.value = UiState.Error("저장에 실패했습니다.")
+            }
         }
     }
 
@@ -153,7 +165,5 @@ class PlanViewModel : ViewModel() {
             context.startActivity(webIntent)
         }
     }
-
-    fun clearUpdateResult() { _updateResult.value = null }
 
 }
