@@ -1,27 +1,33 @@
 package com.han.tripmate.ui.viewmodel
 
-import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ListenerRegistration
+import com.han.tripmate.data.ChatRepository
 import com.han.tripmate.data.ImageRepository
 import com.han.tripmate.data.model.Message
+import com.han.tripmate.ui.util.UiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.*
 
 class ChatViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
     private val imageRepository = ImageRepository()
+    private val chatRepository = ChatRepository()
+
+    private var chatListener: ListenerRegistration? = null
 
     // 메시지 리스트 상태
     private val _messages = mutableStateListOf<Message>()
     val messages: List<Message> get() = _messages
+
+    private val _uiState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val uiState = _uiState.asStateFlow()
 
     // 입력창 텍스트 상태
     var messageText by mutableStateOf("")
@@ -31,45 +37,51 @@ class ChatViewModel : ViewModel() {
         messageText = newText
     }
 
-    // 실시간 메시지 관찰
-    fun observeMessages(chatRoomId: String) {
-        db.collection("chats")
-            .whereEqualTo("chatRoomId", chatRoomId)
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
+    fun resetUiState() { _uiState.value = UiState.Idle }
 
-                snapshot?.let {
-                    _messages.clear()
-                    val newMessages = it.toObjects(Message::class.java)
-                    _messages.addAll(newMessages)
-                }
-            }
+    fun observeMessages(chatRoomId: String) {
+        chatListener?.remove()
+
+        chatListener = chatRepository.observeMessages(chatRoomId) { newMessages ->
+            _messages.clear()
+            _messages.addAll(newMessages)
+        }
     }
 
     // 메시지 전송
     fun sendMessage(chatRoomId: String) {
-        val currentUser = auth.currentUser
-        val uid = currentUser?.uid ?: return
+        val uid = auth.currentUser?.uid ?: return
+        if (messageText.isBlank()) return
 
-        if (messageText.isNotBlank()) {
-            val newMessage = Message(
-                id = UUID.randomUUID().toString(),
-                senderId = uid,
-                text = messageText.trim(),
-                imageUrl = null,
-                timestamp = System.currentTimeMillis().toString()
-            )
-            db.collection("chats").document(newMessage.id).set(newMessage)
+        val textToSend = messageText.trim()
+        val newMessage = Message(
+            id = UUID.randomUUID().toString(),
+            senderId = uid,
+            text = textToSend,
+            chatRoomId = chatRoomId,
+            timestamp = System.currentTimeMillis().toString()
+        )
+
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
             messageText = ""
+
+            val success = chatRepository.sendMessage(chatRoomId, newMessage)
+            if (!success) {
+                _uiState.value = UiState.Error("메시지 전송 실패")
+                messageText = textToSend
+            } else {
+                _uiState.value = UiState.Idle
+            }
         }
     }
 
     // 이미지 업로드 및 전송
-    fun uploadChatImage(context: Context, uri: Uri) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    fun uploadChatImage(chatRoomId: String, uri: Uri) {
+        val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val path = "chat_images/${System.currentTimeMillis()}.jpg"
             val downloadUrl = imageRepository.uploadImage(path, uri)
 
@@ -78,12 +90,20 @@ class ChatViewModel : ViewModel() {
                     id = UUID.randomUUID().toString(),
                     senderId = uid,
                     imageUrl = downloadUrl,
+                    chatRoomId = chatRoomId,
                     timestamp = System.currentTimeMillis().toString()
                 )
-                db.collection("chats").document(imageMessage.id).set(imageMessage)
+                val success = chatRepository.sendMessage(chatRoomId, imageMessage)
+                _uiState.value = if (success) UiState.Idle else UiState.Error("이미지 메시지 저장 실패")
             } else {
-                Toast.makeText(context, "이미지 전송 실패", Toast.LENGTH_SHORT).show()
+                _uiState.value = UiState.Error("이미지 업로드 실패")
             }
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        chatListener?.remove()
+    }
+
 }
