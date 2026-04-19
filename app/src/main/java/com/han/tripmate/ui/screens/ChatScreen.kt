@@ -1,5 +1,6 @@
 package com.han.tripmate.ui.screens
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
@@ -7,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +29,7 @@ import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.ChatViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.han.tripmate.ui.util.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,28 +39,30 @@ fun ChatScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val messages = viewModel.messages
+    val uiState by viewModel.uiState.collectAsState()
+
+    val listState = rememberLazyListState()
 
     val auth = remember { FirebaseAuth.getInstance() }
-    val currentUser = auth.currentUser
-    val myId = currentUser?.uid ?: ""
-
-    if (currentUser == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("로그인이 필요한 서비스입니다.")
-        }
-        return
-    }
+    val myId = auth.currentUser?.uid ?: ""
+    val chatRoomId = "room_${myId}_${guideId}"
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.uploadChatImage(context, it) }
+        uri?.let { viewModel.uploadChatImage(chatRoomId, it) }
     }
-
-    val chatRoomId = "room_${myId}_${guideId}"
 
     LaunchedEffect(chatRoomId) {
         viewModel.observeMessages(chatRoomId)
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is UiState.Error) {
+            Toast.makeText(context, (uiState as UiState.Error).message, Toast.LENGTH_SHORT).show()
+            viewModel.resetUiState()
+        }
     }
 
     Scaffold(
@@ -74,26 +79,20 @@ fun ChatScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
-                },
-                actions = {
-                    IconButton(onClick = { /* 검색 로직 */ }) {
-                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.padding(8.dp))
-                    }
-                    IconButton(onClick = { /* 메뉴 로직 */ }) {
-                        Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.padding(8.dp))
-                    }
                 }
             )
         },
         bottomBar = {
-            // 입력창
+            val isLoading = uiState is UiState.Loading
+
             Surface(tonalElevation = 3.dp) {
                 Row(
                     modifier = Modifier.padding(8.dp).fillMaxWidth().navigationBarsPadding().imePadding(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // + 버튼 클릭 시 갤러리 실행
-                    IconButton(onClick = { galleryLauncher.launch("image/*") }) {
+                    IconButton(onClick = { galleryLauncher.launch("image/*") },
+                        enabled = !isLoading
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "사진 추가", tint = Color.Gray)
                     }
 
@@ -114,23 +113,39 @@ fun ChatScreen(
 
                     TextButton(
                         onClick = { viewModel.sendMessage(chatRoomId) },
-                        enabled = viewModel.messageText.isNotBlank()
+                        enabled = viewModel.messageText.isNotBlank() && !isLoading
                     ) {
-                        Text("전송", color = if (viewModel.messageText.isNotBlank()) MainBlue else Color.Gray, fontWeight = FontWeight.Bold)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MainBlue
+                            )
+                        } else {
+                            Text(
+                                "전송",
+                                color = if (viewModel.messageText.isNotBlank()) MainBlue else Color.Gray,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(Color(0xFFBACEE0)),
             contentPadding = PaddingValues(16.dp)
         ) {
-            items(viewModel.messages) { message ->
-                ChatBubble(message = message, isUser = message.senderId == "my_id")
+            items(messages) { message ->
+                ChatBubble(
+                    message = message,
+                    isUser = message.senderId == myId
+                )
             }
         }
     }
