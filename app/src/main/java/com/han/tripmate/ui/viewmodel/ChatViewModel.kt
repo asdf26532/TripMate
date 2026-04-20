@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
 import com.han.tripmate.data.ChatRepository
 import com.han.tripmate.data.ImageRepository
+import com.han.tripmate.data.model.ChatRoom
 import com.han.tripmate.data.model.Message
 import com.han.tripmate.ui.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,10 @@ class ChatViewModel : ViewModel() {
     private val chatRepository = ChatRepository()
 
     private var chatListener: ListenerRegistration? = null
+    private var roomListListener: ListenerRegistration? = null
+
+    private val _chatRooms = MutableStateFlow<List<ChatRoom>>(emptyList())
+    val chatRooms = _chatRooms.asStateFlow()
 
     // 메시지 리스트 상태
     private val _messages = mutableStateListOf<Message>()
@@ -39,6 +44,14 @@ class ChatViewModel : ViewModel() {
 
     fun resetUiState() { _uiState.value = UiState.Idle }
 
+    fun observeChatRoomList() {
+        val uid = auth.currentUser?.uid ?: return
+        roomListListener?.remove()
+        roomListListener = chatRepository.observeChatRooms(uid) { rooms ->
+            _chatRooms.value = rooms
+        }
+    }
+
     fun observeMessages(chatRoomId: String) {
         chatListener?.remove()
 
@@ -54,12 +67,13 @@ class ChatViewModel : ViewModel() {
         if (messageText.isBlank()) return
 
         val textToSend = messageText.trim()
+        val timestamp = System.currentTimeMillis().toString()
         val newMessage = Message(
             id = UUID.randomUUID().toString(),
             senderId = uid,
             text = textToSend,
             chatRoomId = chatRoomId,
-            timestamp = System.currentTimeMillis().toString()
+            timestamp = timestamp
         )
 
         viewModelScope.launch {
@@ -67,11 +81,17 @@ class ChatViewModel : ViewModel() {
             messageText = ""
 
             val success = chatRepository.sendMessage(chatRoomId, newMessage)
-            if (!success) {
+
+            if (success) {
+                val roomUpdate = mapOf(
+                    "lastMessage" to textToSend,
+                    "lastTimestamp" to timestamp
+                )
+                chatRepository.updateChatRoom(chatRoomId, roomUpdate)
+                _uiState.value = UiState.Idle
+            } else {
                 _uiState.value = UiState.Error("메시지 전송 실패")
                 messageText = textToSend
-            } else {
-                _uiState.value = UiState.Idle
             }
         }
     }
@@ -103,6 +123,7 @@ class ChatViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
+        roomListListener?.remove()
         chatListener?.remove()
     }
 

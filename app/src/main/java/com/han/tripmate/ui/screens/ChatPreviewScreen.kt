@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,19 +17,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.model.ChatRoom
+import com.han.tripmate.ui.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatPreviewScreen(navController: NavHostController) {
-    // 임시 데이터
-    val chatRooms = listOf(
-        ChatRoom("1", "guide_01", "파리 가이드 민수", "내일 오전 10시 에펠탑 앞에서 뵐게요!", "오후 2:30", ""),
-        ChatRoom("2", "guide_02", "교토 현지인 사토", "예약 확인 감사합니다.", "어제", ""),
-        ChatRoom("3", "user_99", "여행자 릴리", "비즈니스 통역 관련 문의드려요.", "3월 20일", "")
-    )
+fun ChatPreviewScreen(
+    navController: NavHostController,
+    viewModel: ChatViewModel = viewModel()
+) {
+    val chatRooms by viewModel.chatRooms.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.observeChatRoomList()
+    }
 
     Scaffold(
         topBar = {
@@ -38,21 +42,26 @@ fun ChatPreviewScreen(navController: NavHostController) {
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            items(chatRooms) { room ->
-                ChatRoomItem(room) {
-                    // 클릭 시 채팅방이동
-                    navController.navigate("chat_screen/${room.otherUserId}")
+        if (chatRooms.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("진행 중인 채팅이 없습니다.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                items(chatRooms) { room ->
+                    ChatRoomItem(room) {
+                        navController.navigate("chat_screen/${room.otherUserId}")
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 0.5.dp,
+                        color = Color.LightGray.copy(alpha = 0.5f)
+                    )
                 }
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    thickness = 0.5.dp,
-                    color = Color.LightGray
-                )
             }
         }
     }
@@ -67,7 +76,6 @@ fun ChatRoomItem(room: ChatRoom, onClick: () -> Unit) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 프로필 이미지 (Coil 사용)
         AsyncImage(
             model = room.profileImageUrl.ifEmpty { "https://via.placeholder.com/150" },
             contentDescription = null,
@@ -80,7 +88,6 @@ fun ChatRoomItem(room: ChatRoom, onClick: () -> Unit) {
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // 마지막 메시지
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -93,7 +100,7 @@ fun ChatRoomItem(room: ChatRoom, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = room.lastTime,
+                    text = room.getFormattedLastTime(),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )

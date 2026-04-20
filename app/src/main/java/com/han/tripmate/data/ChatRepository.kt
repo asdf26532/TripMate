@@ -3,6 +3,7 @@ package com.han.tripmate.data
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import com.han.tripmate.data.model.ChatRoom
 import com.han.tripmate.data.model.Message
 import kotlinx.coroutines.tasks.await
 
@@ -26,6 +27,29 @@ class ChatRepository {
             db.collection("chat_rooms").document(roomId)
                 .collection("messages")
                 .add(message).await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun observeChatRooms(uid: String, onResult: (List<ChatRoom>) -> Unit): ListenerRegistration {
+        return db.collection("chat_rooms")
+            .whereArrayContains("participants", uid)
+            .orderBy("lastTimestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                val rooms = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(ChatRoom::class.java)?.copy(id = doc.id)
+                } ?: emptyList()
+                onResult(rooms)
+            }
+    }
+
+    suspend fun updateChatRoom(roomId: String, updates: Map<String, Any>): Boolean {
+        return try {
+            db.collection("chat_rooms").document(roomId)
+                .update(updates)
+                .await()
             true
         } catch (e: Exception) {
             false
