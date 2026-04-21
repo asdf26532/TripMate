@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.han.tripmate.data.model.Plan
+import com.han.tripmate.ui.util.LoadingOverlay
 import com.han.tripmate.ui.util.UiState
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 
@@ -117,15 +118,7 @@ fun PlanScreen(
         }
 
         if (uiState is UiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
-                    .clickable(enabled = false) { },
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            LoadingOverlay()
         }
 
         if (showAddDialog) {
