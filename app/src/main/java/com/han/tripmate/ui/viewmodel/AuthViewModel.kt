@@ -12,6 +12,7 @@ import com.han.tripmate.data.model.User
 import com.han.tripmate.data.model.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -19,16 +20,42 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val userPrefs = UserPreferences(application)
     private val authRepository = AuthRepository()
 
-    // --- [12일차 추가] 실시간 입력값 및 유효성 상태 관리 ---
     var email by mutableStateOf("")
+        private set
     var password by mutableStateOf("")
+        private set
     var nickname by mutableStateOf("")
+        private set
 
     var emailError by mutableStateOf<String?>(null)
+        private set
     var passwordError by mutableStateOf<String?>(null)
+        private set
     var nicknameError by mutableStateOf<String?>(null)
+        private set
 
-    // 이메일 변경 및 유효성 검사
+
+    val isLoginValid: Boolean
+        get() = email.isNotBlank() && password.isNotBlank() && emailError == null && passwordError == null
+
+    val isSignUpValid: Boolean
+        get() = isLoginValid && nickname.isNotBlank() && nicknameError == null
+
+
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    init {
+        checkSavedUser()
+    }
+
+    // --- 입력 로직 ---
     fun onEmailChanged(newValue: String) {
         email = newValue
         emailError = when {
@@ -38,7 +65,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 비밀번호 변경 및 유효성 검사
     fun onPasswordChanged(newValue: String) {
         password = newValue
         passwordError = when {
@@ -48,31 +74,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 닉네임 변경 및 유효성 검사 (회원가입 시 사용)
     fun onNicknameChanged(newValue: String) {
         nickname = newValue
         nicknameError = if (newValue.isBlank()) "닉네임을 입력해 주세요." else null
-    }
-
-    // 로그인 버튼 활성화 여부
-    private val isLoginValid: Boolean
-        get() = email.isNotBlank() && password.isNotBlank() && emailError == null && passwordError == null
-
-    // 회원가입 버튼 활성화 여부
-    private val isSignUpValid: Boolean
-        get() = isLoginValid && nickname.isNotBlank() && nicknameError == null
-
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser: StateFlow<User?> = _currentUser
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
-
-    init {
-        checkSavedUser()
     }
 
     private fun checkSavedUser() {
@@ -84,7 +88,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 nickname = firebaseUser.displayName ?: "",
                 isVerified = true
             )
-            authRepository.getUserDetails(firebaseUser.uid) { data, error ->
+            authRepository.getUserDetails(firebaseUser.uid) { data, _ ->
                 if (data != null) {
                     val nicknameDetail = data["nickname"] as? String ?: "여행자"
                     val roleStr = data["role"] as? String ?: "USER"
@@ -99,7 +103,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 회원가입 로직
     fun signUp() {
         if (!isSignUpValid) return
         _isLoading.value = true
@@ -115,13 +118,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 로그인 로직
     fun login() {
         if (!isLoginValid) return
         _isLoading.value = true
         _errorMessage.value = null
 
-        authRepository.signIn(email, password) { success, error ->
+        authRepository.signIn(email, password) { success, _ ->
             _isLoading.value = false
             if (success) {
                 checkSavedUser()
@@ -139,20 +141,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun toggleRole(isGuide: Boolean) {
-        val uid = _currentUser.value?.id ?: return
-        _isLoading.value = true
-
-        authRepository.updateUserRole(uid, isGuide) { success ->
-            _isLoading.value = false
-            if (success) {
-                val updatedRole = if (isGuide) UserRole.GUIDE else UserRole.USER
-                _currentUser.value = _currentUser.value?.copy(currentRole = updatedRole)
-            } else {
-                _errorMessage.value = "모드 전환에 실패했습니다. 다시 시도해주세요."
-            }
-        }
-    }
 
     fun clearError() {
         _errorMessage.value = null
