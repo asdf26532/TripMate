@@ -4,10 +4,10 @@ import android.net.Uri
 import android.content.Context
 import android.content.Intent
 import android.location.Geocoder
-import android.widget.Toast
-import androidx.compose.runtime.State
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import com.han.tripmate.ui.util.UiState
+import kotlinx.coroutines.tasks.await
 
 class PlanViewModel : ViewModel() {
 
@@ -40,6 +41,14 @@ class PlanViewModel : ViewModel() {
 
     private val _allPlanLocations = mutableStateListOf<LatLng>()
     val allPlanLocations: List<LatLng> = _allPlanLocations
+
+    val groupedPlans: StateFlow<Map<Int, List<Plan>>> = _plans.map { list ->
+        list.groupBy { it.day }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
+
+    val totalExpense: StateFlow<Int> = _plans.map { list ->
+        list.sumOf { it.expense }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, 0)
 
     init {
         observeUserPlans()
@@ -57,10 +66,16 @@ class PlanViewModel : ViewModel() {
     fun addPlan(plan: Plan) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
-            val newPlan = plan.copy(authorId = uid)
-            com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                .collection("plans")
-                .add(newPlan)
+            _uiState.value = UiState.Loading
+            try {
+                val newPlan = plan.copy(authorId = uid)
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("plans")
+                    .add(newPlan).await()
+                _uiState.value = UiState.Success("새 일정이 추가되었습니다.")
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("일정 추가 실패")
+            }
         }
     }
 

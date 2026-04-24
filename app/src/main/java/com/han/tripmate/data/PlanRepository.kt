@@ -11,6 +11,7 @@ class PlanRepository {
     fun observePlans(uid: String, onResult: (List<Plan>) -> Unit) {
         db.collection("plans")
             .whereEqualTo("authorId", uid)
+            .orderBy("day", Query.Direction.ASCENDING)
             .orderBy("time", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, _ ->
                 val list = snapshot?.documents?.mapNotNull { it.toObject(Plan::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -24,4 +25,7 @@ class PlanRepository {
             true
         } catch (e: Exception) { false }
     }
+
+
 }
+
