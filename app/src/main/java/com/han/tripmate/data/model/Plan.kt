@@ -4,15 +4,15 @@ import java.util.UUID
 
 data class Plan(
     val id: String = UUID.randomUUID().toString(),
-    val title: String,        // 일정 제목
-    val date: String,         // 날짜
+    val title: String,
+    val date: String = "",
     val day: Int = 1,
-    val time: String,         // 시간
-    val location: String,     // 장소 상세
-    val isCompleted: Boolean = false, // 완료 여부
-    val imageUrls: List<String> = emptyList(),   // 사진
-    val memo: String = "",      // 메모
-    val expense: Int = 0,        // 지출
-    val authorId: String = "",   // 작성자
+    val time: String,
+    val location: String,
+    val isCompleted: Boolean = false,
+    val imageUrls: List<String> = emptyList(),
+    val memo: String = "",
+    val expense: Int = 0,
+    val authorId: String = "",
     val order: Int = 0
 )

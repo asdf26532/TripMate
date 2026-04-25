@@ -3,7 +3,7 @@ package com.han.tripmate.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import com.han.tripmate.ui.util.EmptyStateView
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.*
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.han.tripmate.data.model.Plan
+import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.util.LoadingOverlay
 import com.han.tripmate.ui.util.UiState
 import com.han.tripmate.ui.viewmodel.PlanViewModel
@@ -40,9 +42,16 @@ fun PlanScreen(
     planViewModel: PlanViewModel = viewModel(),
     onNavigateToMap: (String) -> Unit
 ) {
-    val plans by planViewModel.plans.collectAsState()
+    val groupedPlans by planViewModel.groupedPlans.collectAsState()
+    val totalExpense by planViewModel.totalExpense.collectAsState()
     val uiState by planViewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    var selectedDay by remember { mutableIntStateOf(1) }
+
+    val dayExpense = remember(groupedPlans, selectedDay) {
+        groupedPlans[selectedDay]?.sumOf { it.expense } ?: 0
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -89,29 +98,56 @@ fun PlanScreen(
                 }
             }
         ) { padding ->
-            if (plans.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("등록된 일정이 없습니다.", color = Color.Gray)
+            Column(modifier = Modifier.padding(padding)) {
+
+                PlanSummaryCard(totalExpense = totalExpense, dayExpense = dayExpense, selectedDay = selectedDay)
+
+                // 2. [신규] 날짜 선택 탭
+                if (groupedPlans.isNotEmpty()) {
+                    ScrollableTabRow(
+                        selectedTabIndex = (groupedPlans.keys.sorted().indexOf(selectedDay)).coerceAtLeast(0),
+                        edgePadding = 16.dp,
+                        containerColor = Color.White,
+                        contentColor = MainBlue,
+                        divider = {}
+                    ) {
+                        groupedPlans.keys.sorted().forEach { day ->
+                            Tab(
+                                selected = selectedDay == day,
+                                onClick = { selectedDay = day },
+                                text = { Text("${day}일차", fontWeight = FontWeight.Bold) }
+                            )
+                        }
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(plans) { plan ->
-                        PlanItem(
-                            plan = plan,
-                            onAddPhotoClick = {
-                                selectedPlanIdForPhoto = plan.id
-                                galleryLauncher.launch("image/*")
-                            },
-                            onEditClick = {
-                                selectedPlanForEdit = plan
-                                showEditDialog = true
-                            },
-                            onItemClick = { onNavigateToMap(plan.id) }
-                        )
+
+                val currentPlans = groupedPlans[selectedDay] ?: emptyList()
+
+                if (currentPlans.isEmpty()) {
+                    EmptyStateView(
+                        icon = Icons.Default.AddLocation,
+                        message = "${selectedDay}일차 일정이 없습니다.\n새로운 여행지를 추가해 보세요!"
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(currentPlans) { plan ->
+                            PlanItem(
+                                plan = plan,
+                                onAddPhotoClick = {
+                                    selectedPlanIdForPhoto = plan.id
+                                    galleryLauncher.launch("image/*")
+                                },
+                                onEditClick = {
+                                    selectedPlanForEdit = plan
+                                    showEditDialog = true
+                                },
+                                onItemClick = { onNavigateToMap(plan.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -125,7 +161,7 @@ fun PlanScreen(
             AddPlanDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { title, time, location ->
-                    planViewModel.addPlan(Plan(title = title, time = time, location = location, date = "2026-04-17"))
+                    planViewModel.addPlan(Plan(title = title, time = time, location = location, day = selectedDay))
                     showAddDialog = false
                 }
             )
@@ -296,4 +332,33 @@ fun EditPlanDetailsDialog(
             TextButton(onClick = onDismiss) { Text("취소") }
         }
     )
+}
+
+@Composable
+fun PlanSummaryCard(totalExpense: Int, dayExpense: Int, selectedDay: Int) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MainBlue),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("${selectedDay}일차 지출", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+            Text(
+                text = "₩ ${String.format("%,d", dayExpense)}",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "총 누적 지출: ₩ ${String.format("%,d", totalExpense)}",
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 14.sp
+            )
+        }
+    }
 }
