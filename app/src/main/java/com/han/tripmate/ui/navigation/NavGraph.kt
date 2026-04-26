@@ -24,16 +24,20 @@ import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @Composable
 fun TripMateNavGraph(navController: NavHostController) {
-    val authViewModel : AuthViewModel = viewModel()
+
+    val authViewModel: AuthViewModel = viewModel()
     val travelViewModel: TravelViewModel = viewModel()
     val planViewModel: PlanViewModel = viewModel()
 
+    // 상태 수집
     val currentUser by authViewModel.currentUser.collectAsState()
+    val plans by planViewModel.plans.collectAsState()
 
+    // 로그인 상태 감지 및 자동 화면 전환
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             navController.navigate(Routes.MAIN) {
-                // 로그인이나 회원가입 화면을 백스택에서 완전히 제거
+
                 popUpTo(Routes.LOGIN) { inclusive = true }
                 popUpTo(Routes.SIGNUP) { inclusive = true }
             }
@@ -42,24 +46,27 @@ fun TripMateNavGraph(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN // 시작 화면 로그인
+        startDestination = Routes.LOGIN
     ) {
+        // 로그인 화면
         composable(Routes.LOGIN) {
             LoginScreen(
                 authViewModel = authViewModel,
-                onLoginClick = { email, password ->
-                    authViewModel.login(email, password)
-            },
+                onLoginSuccess = {
+
+                },
                 onSignUpClick = {
                     navController.navigate(Routes.SIGNUP)
                 }
             )
         }
 
+        //  회원가입 화면
         composable(Routes.SIGNUP) {
             SignUpScreen(
-                onSignUpSuccess = { email, password, nickname ->
-                    authViewModel.signUp(email, password, nickname)
+                authViewModel = authViewModel,
+                onSignUpSuccess = {
+
                 },
                 onBack = {
                     navController.popBackStack()
@@ -67,6 +74,17 @@ fun TripMateNavGraph(navController: NavHostController) {
             )
         }
 
+        // 메인 화면 (홈, 일정, 채팅목록 등 포함)
+        composable(Routes.MAIN) {
+            MainScreen(
+                authViewModel = authViewModel,
+                travelViewModel = travelViewModel,
+                planViewModel = planViewModel,
+                navController = navController
+            )
+        }
+
+        // 상세 화면 (여행 상품/가이드 정보)
         composable(
             route = Routes.DETAIL,
             arguments = listOf(navArgument("serviceId") { type = NavType.StringType })
@@ -77,11 +95,12 @@ fun TripMateNavGraph(navController: NavHostController) {
                 travelViewModel = travelViewModel,
                 onBack = { navController.popBackStack() },
                 onChatClick = { guideId ->
-                    navController.navigate("chat_screen/$guideId")
+                    navController.navigate("${Routes.CHAT_ROOM}/$guideId")
                 }
             )
         }
 
+        // 서비스 등록 화면
         composable(route = Routes.ADD_SERVICE) {
             AddServiceScreen(
                 authViewModel = authViewModel,
@@ -90,6 +109,7 @@ fun TripMateNavGraph(navController: NavHostController) {
             )
         }
 
+        // 채팅방 화면
         composable(
             route = Routes.CHAT_ROOM,
             arguments = listOf(navArgument("guideId") { type = NavType.StringType })
@@ -98,36 +118,28 @@ fun TripMateNavGraph(navController: NavHostController) {
             ChatScreen(
                 guideId = guideId,
                 onBack = {
-                    navController.navigate(Routes.MAIN) {
-                        popUpTo(Routes.MAIN) { inclusive = true }
-                    }
+                    navController.popBackStack()
                 }
             )
         }
 
+        // 일정 지도 보기 화면
         composable(
             route = Routes.PLAN_MAP,
             arguments = listOf(navArgument("planId") { type = NavType.StringType })
         ) { backStackEntry ->
             val planId = backStackEntry.arguments?.getString("planId") ?: ""
-            val selectedPlan = planViewModel.plans.find { it.id == planId }
+
+            val selectedPlan = plans.find { it.id == planId }
 
             if (selectedPlan != null) {
                 PlanMapScreen(
                     currentPlan = selectedPlan,
-                    allPlans = planViewModel.plans,
+                    allPlans = plans,
                     viewModel = planViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
-        }
-
-        composable(Routes.MAIN) {
-            MainScreen(
-                authViewModel = authViewModel,
-                travelViewModel = travelViewModel,
-                planViewModel = planViewModel,
-                navController = navController)
         }
     }
 }
