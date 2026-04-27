@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.han.tripmate.data.model.Plan
+import com.han.tripmate.ui.util.UiState
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 
 @Composable
@@ -36,6 +37,8 @@ fun PlanMapScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
     var searchQuery by remember { mutableStateOf("") }
     var targetLocation by remember { mutableStateOf(LatLng(37.5665, 126.9780)) } // 기본 서울
     var isLocationChanged by remember { mutableStateOf(false) }
@@ -43,6 +46,32 @@ fun PlanMapScreen(
     val pathPoints = viewModel.allPlanLocations
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(targetLocation, 15f)
+    }
+
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Success -> {
+                val message = (uiState as UiState.Success<String>).data
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                viewModel.resetUiState() // [수정] clearUpdateResult 대신 resetUiState 호출
+                if (message.contains("수정") || message.contains("성공")) {
+                    isLocationChanged = false
+                    onBack()
+                }
+            }
+            is UiState.Error -> {
+                Toast.makeText(context, (uiState as UiState.Error).message, Toast.LENGTH_SHORT).show()
+                viewModel.resetUiState()
+            }
+            else -> {}
+        }
+    }
+
+    LaunchedEffect(currentPlan) {
+        viewModel.getLatLngFromAddress(context, currentPlan.location)?.let {
+            targetLocation = it
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+        }
     }
 
     LaunchedEffect(allPlans) {
@@ -56,18 +85,6 @@ fun PlanMapScreen(
             val bounds = viewModel.calculateBounds(pathPoints)
             bounds?.let {
                 cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(it, 150))
-            }
-        }
-    }
-
-    val updateMessage by viewModel.updateResult
-    LaunchedEffect(updateMessage) {
-        updateMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearUpdateResult()
-            if (it.contains("성공")) {
-                isLocationChanged = false
-                onBack()
             }
         }
     }
@@ -108,7 +125,6 @@ fun PlanMapScreen(
                 )
             }
 
-            // 임시 마커
             if (isLocationChanged) {
                 Marker(
                     state = MarkerState(position = targetLocation),
@@ -173,19 +189,19 @@ fun PlanMapScreen(
             }
 
             if (isLocationChanged) {
-                Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = { viewModel.updatePlanLocation(context, currentPlan.id, searchQuery) },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF)),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    onClick = {
+                        viewModel.updatePlanLocation(currentPlan.id, searchQuery)
+                    },
+                    modifier = Modifier.padding(top = 8.dp).align(Alignment.CenterHorizontally)
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("이 위치로 일정 수정", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("이 장소로 확정")
                 }
             }
+        }
+
+        if (uiState is UiState.Loading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
 
         ExtendedFloatingActionButton(
