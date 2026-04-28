@@ -36,6 +36,18 @@ class AuthRepository {
                 }
             }
     }
+
+    fun updateUserDetails(uid: String, updates: Map<String, Any>, onResult: (Boolean, String?) -> Unit) {
+        db.collection("users").document(uid)
+            .update(updates)
+            .addOnSuccessListener {
+                onResult(true, null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, e.message ?: "프로필 업데이트 실패")
+            }
+    }
+
     // 로그인
     fun signIn(email: String, pw: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, pw)

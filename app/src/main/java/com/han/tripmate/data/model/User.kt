@@ -11,7 +11,8 @@ data class User(
     val nickname : String = "",
     val isVerified : Boolean = false,
     val rating : Double = 0.0,
-    val currentRole : UserRole = UserRole.USER
+    val currentRole : UserRole = UserRole.USER,
+    val travelStyles: List<String> = emptyList(),
 )
 
 

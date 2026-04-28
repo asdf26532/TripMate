@@ -103,6 +103,31 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateProfile(newNickname: String, bio: String, styles: List<String>) {
+        val uid = _currentUser.value?.id ?: return
+        _isLoading.value = true
+
+        val updates = mapOf(
+            "nickname" to newNickname,
+            "bio" to bio,
+            "travelStyles" to styles
+        )
+
+        authRepository.updateUserDetails(uid, updates) { success, error ->
+            _isLoading.value = false
+            if (success) {
+                _currentUser.value = _currentUser.value?.copy(
+                    nickname = newNickname,
+                    bio = bio,
+                    travelStyles = styles
+                )
+                _errorMessage.value = "프로필이 성공적으로 업데이트되었습니다."
+            } else {
+                _errorMessage.value = error ?: "업데이트에 실패했습니다."
+            }
+        }
+    }
+
     fun signUp() {
         if (!isSignUpValid) return
         _isLoading.value = true
@@ -140,6 +165,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             userPrefs.clear()
         }
     }
+
 
 
     fun clearError() {
