@@ -13,6 +13,7 @@ data class User(
     val rating : Double = 0.0,
     val currentRole : UserRole = UserRole.USER,
     val travelStyles: List<String> = emptyList(),
+    val bio: String = ""
 )
 
 

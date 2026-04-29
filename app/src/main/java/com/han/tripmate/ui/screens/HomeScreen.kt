@@ -23,17 +23,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
+import com.han.tripmate.data.model.Plan
 import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.theme.MainBlue
-import com.han.tripmate.ui.theme.TripMateTheme
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
@@ -353,5 +351,31 @@ fun ServiceListItem(
                 .size(24.dp)
                 .clickable { onFavoriteClick() }
         )
+    }
+}
+
+@Composable
+fun UpcomingTripCard(plan: Plan) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MainBlue)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Badge(containerColor = Color.White.copy(alpha = 0.2f)) {
+                    Text("D-Day", color = Color.White, modifier = Modifier.padding(4.dp))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = plan.title, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = plan.location,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 14.sp
+            )
+            // 날짜 표시 로직 추가 필요
+        }
     }
 }
