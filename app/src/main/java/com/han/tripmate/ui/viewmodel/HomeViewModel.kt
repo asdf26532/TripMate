@@ -1,7 +1,9 @@
 package com.han.tripmate.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.han.tripmate.data.model.Plan
+import com.han.tripmate.ui.util.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
@@ -34,4 +36,17 @@ class HomeViewModel : ViewModel() {
             _dDay.value = diff / (24 * 60 * 60 * 1000)
         }
     }
+
+    fun checkTodayTrip(context: Context) {
+        val currentPlan = _upcomingPlan.value
+        val currentDDay = _dDay.value
+
+        if (currentPlan != null && currentDDay == 0L) {
+            NotificationHelper(context).showTripNotification(
+                "오늘 여행을 떠나요! ✈️",
+                "${currentPlan.title} 일정이 오늘 시작됩니다. 짐은 다 챙기셨나요?"
+            )
+        }
+    }
+
 }
