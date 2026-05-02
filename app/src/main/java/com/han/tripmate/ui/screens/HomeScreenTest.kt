@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.han.tripmate.data.model.Plan
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.HomeViewModel
@@ -144,6 +145,35 @@ fun ThemeCard(title: String, emoji: String, modifier: Modifier) {
         ) {
             Text(emoji, fontSize = 30.sp)
             Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+@Composable
+fun TravelTipSection(plan: Plan) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("💡", fontSize = 24.sp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "${plan.location} 여행 꿀팁",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = MainBlue
+                )
+                Text(
+                    text = "이 지역은 오후에 비 소식이 있을 수 있어요. 우산을 챙기세요!",
+                    fontSize = 13.sp,
+                    color = Color.DarkGray
+                )
+            }
         }
     }
 }
