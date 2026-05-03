@@ -1,15 +1,30 @@
 package com.han.tripmate.ui.viewmodel
 
+import android.app.Application
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import com.han.tripmate.data.model.Plan
 import com.han.tripmate.ui.util.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.han.tripmate.ui.util.NetworkMonitor
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import java.util.*
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val networkMonitor = NetworkMonitor(application)
+
+    val isOnline: StateFlow<Boolean> = networkMonitor.isConnected.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
+
     private val _upcomingPlan = MutableStateFlow<Plan?>(null)
     val upcomingPlan = _upcomingPlan.asStateFlow()
 

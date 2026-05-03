@@ -55,7 +55,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         checkSavedUser()
     }
 
-    // --- 입력 로직 ---
     fun onEmailChanged(newValue: String) {
         email = newValue
         emailError = when {

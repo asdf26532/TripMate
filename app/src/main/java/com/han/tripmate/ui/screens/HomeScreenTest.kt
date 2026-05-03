@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.han.tripmate.ui.util.OfflineBanner
 import com.han.tripmate.data.model.Plan
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.AuthViewModel
@@ -36,103 +38,118 @@ fun HomeScreenTest(
     val upcomingPlan by homeViewModel.upcomingPlan.collectAsState()
     val dDay by homeViewModel.dDay.collectAsState()
 
+    val isOnline by homeViewModel.isOnline.collectAsState()
+    val context = LocalContext.current
+
     LaunchedEffect(plans) {
         homeViewModel.calculateUpcomingPlan(plans)
+        homeViewModel.checkTodayTrip(context)
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FA))
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp)
     ) {
 
-        Text(
-            text = "${currentUser?.nickname ?: "여행자"}님,\n어디로 떠나볼까요?",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            lineHeight = 34.sp,
-            color = Color(0xFF1A1A1A)
-        )
+        OfflineBanner(visible = !isOnline)
 
-        Row(modifier = Modifier.padding(top = 8.dp)) {
-            currentUser?.travelStyles?.take(3)?.forEach { style ->
-                Text(
-                    text = "#$style ",
-                    fontSize = 14.sp,
-                    color = MainBlue,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        Brush.horizontalGradient(listOf(MainBlue, Color(0xFF64B5F6)))
+            Text(
+                text = "${currentUser?.nickname ?: "여행자"}님,\n어디로 떠나볼까요?",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 34.sp,
+                color = Color(0xFF1A1A1A)
+            )
+
+            Row(modifier = Modifier.padding(top = 8.dp)) {
+                currentUser?.travelStyles?.take(3)?.forEach { style ->
+                    Text(
+                        text = "#$style ",
+                        fontSize = 14.sp,
+                        color = MainBlue,
+                        fontWeight = FontWeight.Medium
                     )
-                    .padding(24.dp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                if (upcomingPlan != null) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.FlightTakeoff, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("다가오는 여행", color = Color.White.copy(0.9f), fontSize = 14.sp)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            Brush.horizontalGradient(listOf(MainBlue, Color(0xFF64B5F6)))
+                        )
+                        .padding(24.dp)
+                ) {
+                    if (upcomingPlan != null) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.FlightTakeoff, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("다가오는 여행", color = Color.White.copy(0.9f), fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = upcomingPlan!!.title,
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (dDay == 0L) "오늘 떠나요! ✈️" else "출발까지 ${dDay}일 남았어요",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = upcomingPlan!!.title,
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (dDay == 0L) "오늘 떠나요! ✈️" else "출발까지 ${dDay}일 남았어요",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text("아직 예정된 여행이 없어요", color = Color.White, fontWeight = FontWeight.Bold)
-                        Button(
-                            onClick = onAddPlanClick,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            modifier = Modifier.padding(top = 12.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = MainBlue)
-                            Text("첫 일정 만들기", color = MainBlue)
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                            Text("아직 예정된 여행이 없어요", color = Color.White, fontWeight = FontWeight.Bold)
+                            Button(
+                                onClick = onAddPlanClick,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                modifier = Modifier.padding(top = 12.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = MainBlue)
+                                Text("첫 일정 만들기", color = MainBlue)
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            if (upcomingPlan != null) {
+                TravelTipSection(upcomingPlan!!)
+            }
 
-        Text("추천 여행 테마", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ThemeCard("제주도 맛집", "🥘", Modifier.weight(1f))
-            ThemeCard("일본 온천", "♨️", Modifier.weight(1f))
+            Text("추천 여행 테마", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ThemeCard("제주도 맛집", "🥘", Modifier.weight(1f))
+                ThemeCard("일본 온천", "♨️", Modifier.weight(1f))
+            }
         }
     }
 }
 
 @Composable
-fun ThemeCard(title: String, emoji: String, modifier: Modifier) {
+fun ThemeCard(title: String, emoji: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.height(100.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
