@@ -26,6 +26,8 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import com.han.tripmate.ui.util.UiState
 import kotlinx.coroutines.tasks.await
+import android.util.Log
+import com.han.tripmate.data.model.Itinerary
 
 class PlanViewModel : ViewModel() {
 
@@ -49,6 +51,9 @@ class PlanViewModel : ViewModel() {
     val totalExpense: StateFlow<Int> = _plans.map { list ->
         list.sumOf { it.expense }
     }.stateIn(viewModelScope, SharingStarted.Lazily, 0)
+
+    private val _itineraryList = MutableStateFlow<List<Itinerary>>(emptyList())
+    val itineraryList: StateFlow<List<Itinerary>> = _itineraryList.asStateFlow()
 
     init {
         observeUserPlans()
@@ -178,6 +183,27 @@ class PlanViewModel : ViewModel() {
             val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng")
             val webIntent = Intent(Intent.ACTION_VIEW, webUri)
             context.startActivity(webIntent)
+        }
+    }
+
+    fun sortItinerariesByTime() {
+        viewModelScope.launch {
+            try {
+                val sorted = _itineraryList.value.sortedBy { it.time }
+                _itineraryList.value = sorted
+            } catch (e: Exception) {
+                Log.e("PlanViewModel", "정렬 오류: ${e.message}")
+            }
+        }
+    }
+
+    fun loadItineraries(planId: String) {
+        viewModelScope.launch {
+
+            planRepository.getItineraries(planId) { list ->
+                _itineraryList.value = list
+                sortItinerariesByTime()
+            }
         }
     }
 
