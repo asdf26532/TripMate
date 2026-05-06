@@ -14,12 +14,14 @@ import com.han.tripmate.data.model.Itinerary
 import com.han.tripmate.ui.util.TimelineIndicator
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.util.TravelInfoIndicator
+import com.han.tripmate.ui.viewmodel.PlanViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanDetailScreen(
     planTitle: String,
-    itineraryList: List<Itinerary>
+    itineraryList: List<Itinerary>,
+    planViewModel: PlanViewModel
 ) {
     Scaffold(
         topBar = {
@@ -84,9 +86,12 @@ fun PlanDetailScreen(
                     }
 
                     if (index < itineraryList.size - 1) {
+                        val current = itineraryList[index]
+                        val next = itineraryList[index + 1]
+
                         TravelInfoIndicator(
-                            duration = "20분",
-                            distance = "2.5km"
+                            duration = planViewModel.estimateTravelTime(current, next),
+                            distance = planViewModel.getDistanceString(current, next)
                         )
                     }
                 }

@@ -207,4 +207,36 @@ class PlanViewModel : ViewModel() {
         }
     }
 
+    fun getDistanceString(start: Itinerary, end: Itinerary): String {
+        val startLoc = android.location.Location("start").apply {
+        }
+        val endLoc = android.location.Location("end").apply {
+            latitude = end.lat
+            longitude = end.lng
+        }
+
+        val distanceInMeters = startLoc.distanceTo(endLoc)
+        return if (distanceInMeters >= 1000) {
+            String.format("%.1fkm", distanceInMeters / 1000)
+        } else {
+            "${distanceInMeters.toInt()}m"
+        }
+    }
+
+    fun estimateTravelTime(start: Itinerary, end: Itinerary): String {
+        val startLoc = android.location.Location("start").apply {
+            latitude = start.lat
+            longitude = start.lng
+        }
+        val endLoc = android.location.Location("end").apply {
+            latitude = end.lat
+            longitude = end.lng
+        }
+
+        val meters = startLoc.distanceTo(endLoc)
+        val minutes = (meters / 666).toInt() // 40km/h = 약 666m/min
+
+        return if (minutes < 1) "1분 내외" else "${minutes}분"
+    }
+
 }
