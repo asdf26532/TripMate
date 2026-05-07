@@ -45,5 +45,18 @@ class PlanRepository {
             }
     }
 
+    suspend fun addItinerary(planId: String, itinerary: Itinerary): Boolean {
+        return try {
+            db.collection("plans")
+                .document(planId)
+                .collection("itineraries")
+                .add(itinerary)
+                .await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 }
 

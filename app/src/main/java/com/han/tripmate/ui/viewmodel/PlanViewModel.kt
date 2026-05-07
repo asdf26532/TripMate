@@ -234,9 +234,24 @@ class PlanViewModel : ViewModel() {
         }
 
         val meters = startLoc.distanceTo(endLoc)
-        val minutes = (meters / 666).toInt() // 40km/h = 약 666m/min
+        val minutes = (meters / 666).toInt()
 
         return if (minutes < 1) "1분 내외" else "${minutes}분"
+    }
+
+    fun addItinerary(planId: String, title: String, time: String, memo: String) {
+        val newItinerary = Itinerary(
+            title = title,
+            time = time,
+            memo = memo
+        )
+
+        viewModelScope.launch {
+            val success = planRepository.addItinerary(planId, newItinerary)
+            if (success) {
+                loadItineraries(planId)
+            }
+        }
     }
 
 }

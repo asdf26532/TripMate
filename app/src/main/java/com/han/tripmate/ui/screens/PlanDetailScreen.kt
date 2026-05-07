@@ -15,85 +15,123 @@ import com.han.tripmate.ui.util.TimelineIndicator
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.util.TravelInfoIndicator
 import com.han.tripmate.ui.viewmodel.PlanViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
+import com.han.tripmate.ui.util.ItineraryInputForm
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanDetailScreen(
     planTitle: String,
+    planId: String,
     itineraryList: List<Itinerary>,
     planViewModel: PlanViewModel
 ) {
+    val sheetState = rememberModalBottomSheetState()
+    var showSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(planTitle, fontWeight = FontWeight.Bold) }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showSheet = true },
+                containerColor = MainBlue,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "일정 추가")
+            }
         }
+
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            itemsIndexed(itineraryList) { index, itinerary ->
-
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min)
-                    ) {
-
-                        TimelineIndicator(
-                            isFirst = index == 0,
-                            isLast = index == itineraryList.size - 1
-                        )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Card(
+                itemsIndexed(itineraryList) { index, itinerary ->
+                    Column {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(2.dp)
+                                .height(IntrinsicSize.Min)
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = itinerary.time,
-                                    fontSize = 12.sp,
-                                    color = MainBlue,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = itinerary.title,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (itinerary.memo.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(4.dp))
+                            TimelineIndicator(
+                                isFirst = index == 0,
+                                isLast = index == itineraryList.size - 1
+                            )
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        text = itinerary.memo,
-                                        fontSize = 14.sp,
-                                        color = Color.Gray
+                                        text = itinerary.time,
+                                        fontSize = 12.sp,
+                                        color = MainBlue,
+                                        fontWeight = FontWeight.Bold
                                     )
+                                    Text(
+                                        text = itinerary.title,
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (itinerary.memo.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = itinerary.memo,
+                                            fontSize = 14.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (index < itineraryList.size - 1) {
-                        val current = itineraryList[index]
-                        val next = itineraryList[index + 1]
+                        if (index < itineraryList.size - 1) {
+                            val current = itineraryList[index]
+                            val next = itineraryList[index + 1]
 
-                        TravelInfoIndicator(
-                            duration = planViewModel.estimateTravelTime(current, next),
-                            distance = planViewModel.getDistanceString(current, next)
-                        )
+                            TravelInfoIndicator(
+                                duration = planViewModel.estimateTravelTime(current, next),
+                                distance = planViewModel.getDistanceString(current, next)
+                            )
+                        }
                     }
+                }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
+            }
+
+            if (showSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showSheet = false },
+                    sheetState = sheetState,
+                    containerColor = Color.White,
+                    dragHandle = { BottomSheetDefaults.DragHandle() }
+                ) {
+                    ItineraryInputForm(
+                        onSave = { title, time, memo ->
+                            planViewModel.addItinerary(planId, title, time, memo)
+                            showSheet = false
+                        }
+                    )
                 }
             }
         }
