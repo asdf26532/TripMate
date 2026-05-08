@@ -254,4 +254,13 @@ class PlanViewModel : ViewModel() {
         }
     }
 
+    fun deleteItinerary(planId: String, itineraryId: String) {
+        viewModelScope.launch {
+            val success = planRepository.deleteItinerary(planId, itineraryId)
+            if (success) {
+                loadItineraries(planId)
+            }
+        }
+    }
+
 }

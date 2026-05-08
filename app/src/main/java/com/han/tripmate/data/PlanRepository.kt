@@ -58,5 +58,19 @@ class PlanRepository {
         }
     }
 
+    suspend fun deleteItinerary(planId: String, itineraryId: String): Boolean {
+        return try {
+            db.collection("plans")
+                .document(planId)
+                .collection("itineraries")
+                .document(itineraryId)
+                .delete()
+                .await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 }
 
