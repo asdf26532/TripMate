@@ -239,17 +239,26 @@ class PlanViewModel : ViewModel() {
         return if (minutes < 1) "1분 내외" else "${minutes}분"
     }
 
-    fun addItinerary(planId: String, title: String, time: String, memo: String) {
-        val newItinerary = Itinerary(
-            title = title,
-            time = time,
-            memo = memo
-        )
-
+    fun addItineraryWithLocation(context: Context, planId: String, title: String, time: String, memo: String) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
+
+            val latLng = getLatLngFromAddress(context, title)
+
+            val newItinerary = Itinerary(
+                title = title,
+                time = time,
+                memo = memo,
+                lat = latLng?.latitude ?: 0.0,
+                lng = latLng?.longitude ?: 0.0
+            )
+
             val success = planRepository.addItinerary(planId, newItinerary)
             if (success) {
                 loadItineraries(planId)
+                _uiState.value = UiState.Success("일정이 추가되었습니다.")
+            } else {
+                _uiState.value = UiState.Error("저장 실패")
             }
         }
     }

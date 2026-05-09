@@ -25,6 +25,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +35,8 @@ fun PlanDetailScreen(
     itineraryList: List<Itinerary>,
     planViewModel: PlanViewModel
 ) {
+    val context = LocalContext.current
+
     val sheetState = rememberModalBottomSheetState()
     var showSheet by remember { mutableStateOf(false) }
 
@@ -172,7 +175,7 @@ fun PlanDetailScreen(
                 ) {
                     ItineraryInputForm(
                         onSave = { title, time, memo ->
-                            planViewModel.addItinerary(planId, title, time, memo)
+                            planViewModel.addItineraryWithLocation(context, planId, title, time, memo)
                             showSheet = false
                         }
                     )

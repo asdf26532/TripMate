@@ -1,6 +1,7 @@
 package com.han.tripmate.ui.util
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import com.han.tripmate.ui.theme.MainBlue
 fun ItineraryInputForm(
     onSave: (String, String, String) -> Unit
 ) {
+
     var title by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("12:00") }
     var memo by remember { mutableStateOf("") }
@@ -22,7 +24,7 @@ fun ItineraryInputForm(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .navigationBarsPadding() // 키보드 가림 방지
+            .navigationBarsPadding()
     ) {
         Text("새 일정 추가", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
@@ -46,7 +48,7 @@ fun ItineraryInputForm(
         OutlinedTextField(
             value = memo,
             onValueChange = { memo = it },
-            label = { Text("메모 (선택사항)") },
+            label = { Text("메모 ") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -55,9 +57,11 @@ fun ItineraryInputForm(
         Button(
             onClick = { onSave(title, time, memo) },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+            colors = ButtonDefaults.buttonColors(containerColor = MainBlue),
+            shape = RoundedCornerShape(12.dp)
         ) {
             Text("일정 저장", color = Color.White)
         }
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
