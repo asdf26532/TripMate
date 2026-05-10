@@ -1,12 +1,13 @@
 package com.han.tripmate.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,13 +20,12 @@ import com.han.tripmate.ui.util.TravelInfoIndicator
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.*
-import com.han.tripmate.ui.util.ItineraryInputForm
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import com.han.tripmate.ui.util.ItineraryInputForm
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,6 +146,40 @@ fun PlanDetailScreen(
                                                 fontSize = 14.sp,
                                                 color = Color.Gray
                                             )
+                                        }
+                                        if (itinerary.lat != 0.0 && itinerary.lng != 0.0) {
+                                            Spacer(modifier = Modifier.height(12.dp))
+
+                                            val cameraPositionState = rememberCameraPositionState {
+                                                position = CameraPosition.fromLatLngZoom(LatLng(itinerary.lat, itinerary.lng), 15f)
+                                            }
+
+                                            Surface(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(120.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                                                onClick = {
+
+                                                    planViewModel.openExternalMap(context, itinerary.title, itinerary.lat, itinerary.lng)
+                                                }
+                                            ) {
+                                                GoogleMap(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    cameraPositionState = cameraPositionState,
+                                                    uiSettings = MapUiSettings(
+                                                        zoomControlsEnabled = false,
+                                                        scrollGesturesEnabled = false,
+                                                        zoomGesturesEnabled = false
+                                                    )
+                                                ) {
+                                                    Marker(
+                                                        state = MarkerState(position = LatLng(itinerary.lat, itinerary.lng)),
+                                                        title = itinerary.title
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
