@@ -20,8 +20,11 @@ import com.han.tripmate.ui.util.TravelInfoIndicator
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavHostController
 import com.han.tripmate.ui.util.ItineraryInputForm
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -33,7 +36,8 @@ fun PlanDetailScreen(
     planTitle: String,
     planId: String,
     itineraryList: List<Itinerary>,
-    planViewModel: PlanViewModel
+    planViewModel: PlanViewModel,
+    navController: NavHostController
 ) {
     val context = LocalContext.current
 
@@ -43,9 +47,20 @@ fun PlanDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(planTitle, fontWeight = FontWeight.Bold) }
+                title = { Text(planTitle, fontWeight = FontWeight.Bold) },
+                actions = {
+                    IconButton(onClick = { navController.navigate("plan_map/$planId") }) {
+                        Icon(imageVector = Icons.Default.Map, contentDescription = "전체 지도")
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                    }
+                }
             )
         },
+
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showSheet = true },

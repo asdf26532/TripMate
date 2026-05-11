@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.model.Plan
 import com.han.tripmate.ui.theme.MainBlue
@@ -40,7 +41,8 @@ import com.han.tripmate.ui.viewmodel.PlanViewModel
 @Composable
 fun PlanScreen(
     planViewModel: PlanViewModel = viewModel(),
-    onNavigateToMap: (String) -> Unit
+    onNavigateToMap: (String) -> Unit,
+    navController: NavHostController
 ) {
     val groupedPlans by planViewModel.groupedPlans.collectAsState()
     val totalExpense by planViewModel.totalExpense.collectAsState()
@@ -145,7 +147,7 @@ fun PlanScreen(
                                     selectedPlanForEdit = plan
                                     showEditDialog = true
                                 },
-                                onItemClick = { onNavigateToMap(plan.id) }
+                                onItemClick = { navController.navigate("plan_detail/${plan.id}/${plan.title}") }
                             )
                         }
                     }

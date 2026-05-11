@@ -15,6 +15,7 @@ object Routes {
     const val ADD_SERVICE = "add_service"
     const val CHAT_ROOM = "chat_screen/{guideId}"
     const val PLAN_MAP = "plan_map/{planId}"
+    const val PLAN_DETAIL = "plan_detail/{planId}/{planTitle}"
 }
 sealed class BottomNavItem(
     val route: String,

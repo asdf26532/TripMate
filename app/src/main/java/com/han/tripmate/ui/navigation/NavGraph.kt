@@ -16,6 +16,7 @@ import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
+import com.han.tripmate.ui.screens.PlanDetailScreen
 import com.han.tripmate.ui.screens.PlanMapScreen
 import com.han.tripmate.ui.screens.SignUpScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
@@ -140,6 +141,31 @@ fun TripMateNavGraph(navController: NavHostController) {
                     onBack = { navController.popBackStack() }
                 )
             }
+        }
+
+        composable(
+            route = Routes.PLAN_DETAIL,
+            arguments = listOf(
+                navArgument("planId") { type = NavType.StringType },
+                navArgument("planTitle") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val planId = backStackEntry.arguments?.getString("planId") ?: ""
+            val planTitle = backStackEntry.arguments?.getString("planTitle") ?: ""
+
+            // 뷰모델 상태 관찰
+            val itineraryList by planViewModel.itineraryList.collectAsState()
+
+            LaunchedEffect(planId) {
+                planViewModel.loadItineraries(planId)
+            }
+
+            PlanDetailScreen(
+                planTitle = planTitle,
+                planId = planId,
+                itineraryList = itineraryList,
+                planViewModel = planViewModel
+            )
         }
     }
 }
