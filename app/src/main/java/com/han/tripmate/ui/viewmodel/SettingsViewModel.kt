@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.han.tripmate.data.ImageRepository
 import com.han.tripmate.data.UserRepository
@@ -88,7 +89,13 @@ class SettingsViewModel : ViewModel() {
 
             if (downloadUrl != null) {
                 val success = userRepository.updateProfile(uid, mapOf("profileImage" to downloadUrl))
-                if (success) profileImageUrl = downloadUrl
+                if (success) {
+                    val profileUpdates = userProfileChangeRequest { photoUri = Uri.parse(downloadUrl) }
+                    auth.currentUser?.updateProfile(profileUpdates)
+                    profileImageUrl = downloadUrl
+                }
+            } else {
+                errorMessage = "이미지 업로드에 실패했습니다."
             }
             isUpdating = false
         }
@@ -96,13 +103,26 @@ class SettingsViewModel : ViewModel() {
 
     fun updateUserName(newName: String, onComplete: () -> Unit) {
         val uid = auth.currentUser?.uid ?: return
+        if (newName.isBlank()) {
+            errorMessage = "이름을 입력해주세요."
+            return
+        }
 
         viewModelScope.launch {
             isUpdating = true
+
             val success = userRepository.updateProfile(uid, mapOf("name" to newName))
             if (success) {
+
+                val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
+                    displayName = newName
+                }
+                auth.currentUser?.updateProfile(profileUpdates)
+
                 userName = newName
                 onComplete()
+            } else {
+                errorMessage = "업데이트에 실패했습니다."
             }
             isUpdating = false
         }

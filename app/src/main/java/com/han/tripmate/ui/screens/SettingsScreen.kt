@@ -40,131 +40,137 @@ fun SettingsScreen(
         uri?.let { viewModel.uploadProfileImage(it) }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("설정", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("설정", fontWeight = FontWeight.Bold) },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
-            )
+            }
+        ) { padding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // 프로필 카드
+                item {
+                    ProfileCard(
+                        userName = viewModel.userName,
+                        profileUrl = viewModel.profileImageUrl,
+                        onEditClick = { galleryLauncher.launch("image/*") },
+                        onNameClick = {
+                            tempName = viewModel.userName
+                            showNameEditDialog = true
+                        }
+                    )
+                }
+
+                // 일반 설정 섹션
+                item {
+                    SettingSection(header = "일반 설정") {
+                        SettingItemWithSwitch(
+                            icon = Icons.Default.Notifications,
+                            title = "알림 설정",
+                            subtitle = "푸시 알림 및 이벤트 알림",
+                            checked = viewModel.isNotificationsEnabled,
+                            onCheckedChange = { viewModel.toggleNotifications(it) }
+                        )
+                        SettingItemWithSwitch(
+                            icon = Icons.Default.DarkMode,
+                            title = "다크 모드",
+                            subtitle = "앱 배경 테마 변경",
+                            checked = viewModel.isDarkMode,
+                            onCheckedChange = { viewModel.toggleDarkMode(it) }
+                        )
+                        SettingItem(
+                            icon = Icons.Default.Language,
+                            title = "언어 설정",
+                            subtitle = "한국어",
+                            onClick = { showDetailDialog = "언어 설정" }
+                        )
+                    }
+                }
+
+                // 계정 및 보안 섹션
+                item {
+                    SettingSection(header = "계정 및 보안") {
+                        SettingItem(
+                            icon = Icons.Default.Lock,
+                            title = "비밀번호 변경",
+                            onClick = { showDetailDialog = "비밀번호 변경" }
+                        )
+                        SettingItem(
+                            icon = Icons.Default.Security,
+                            title = "개인정보 처리방침",
+                            onClick = { showDetailDialog = "개인정보 처리방침" }
+                        )
+                    }
+                }
+
+                // 앱 정보 섹션
+                item {
+                    SettingSection(header = "앱 정보") {
+                        SettingItem(
+                            icon = Icons.Default.Info,
+                            title = "버전 정보",
+                            subtitle = "1.0.0 (최신버전)",
+                            onClick = { showDetailDialog = "버전 정보" }
+                        )
+                        SettingItem(
+                            icon = Icons.Default.BugReport,
+                            title = "문의하기 / 피드백",
+                            onClick = { showDetailDialog = "문의하기" }
+                        )
+                        SettingItem(
+                            icon = Icons.Default.Description,
+                            title = "오픈소스 라이선스",
+                            onClick = { showDetailDialog = "오픈소스 라이선스" }
+                        )
+                    }
+                }
+
+                // 하단 버튼
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        TextButton(
+                            onClick = { viewModel.signOut { onNavigateToLogin() } },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("로그아웃", color = Color.Gray, fontWeight = FontWeight.Medium)
+                        }
+                        TextButton(
+                            onClick = { viewModel.deleteAccount { onNavigateToLogin() } },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("회원탈퇴", color = Color.Red.copy(alpha = 0.6f), fontWeight = FontWeight.Medium)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("com.han.tripmate", fontSize = 11.sp, color = Color.LightGray, letterSpacing = 1.sp)
+                    }
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
+            }
         }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // 프로필
-            item {
-                ProfileCard(
-                    userName = viewModel.userName,
-                    profileUrl = viewModel.profileImageUrl,
-                    onEditClick = { galleryLauncher.launch("image/*") },
-                    onNameClick = {
-                        tempName = viewModel.userName
-                        showNameEditDialog = true
-                    }
-                )
-            }
 
-            // 일반 설정
-            item {
-                SettingSection(header = "일반 설정") {
-                    SettingItemWithSwitch(
-                        icon = Icons.Default.Notifications,
-                        title = "알림 설정",
-                        subtitle = "푸시 알림 및 이벤트 알림",
-                        checked = viewModel.isNotificationsEnabled,
-                        onCheckedChange = { viewModel.toggleNotifications(it) }
-                    )
-                    SettingItemWithSwitch(
-                        icon = Icons.Default.DarkMode,
-                        title = "다크 모드",
-                        subtitle = "앱 배경 테마 변경",
-                        checked = viewModel.isDarkMode,
-                        onCheckedChange = { viewModel.toggleDarkMode(it) }
-                    )
-                    SettingItem(
-                        icon = Icons.Default.Language,
-                        title = "언어 설정",
-                        subtitle = "한국어",
-                        onClick = { showDetailDialog = "언어 설정" }
-                    )
+        if (viewModel.isUpdating) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = Color.Black.copy(alpha = 0.3f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
                 }
-            }
-
-            // 계정 및 보안
-            item {
-                SettingSection(header = "계정 및 보안") {
-                    SettingItem(
-                        icon = Icons.Default.Lock,
-                        title = "비밀번호 변경",
-                        onClick = { showDetailDialog = "비밀번호 변경" }
-                    )
-                    SettingItem(
-                        icon = Icons.Default.Security,
-                        title = "개인정보 처리방침",
-                        onClick = { showDetailDialog = "개인정보 처리방침" }
-                    )
-                }
-            }
-
-            // 앱 정보
-            item {
-                SettingSection(header = "앱 정보") {
-                    SettingItem(
-                        icon = Icons.Default.Info,
-                        title = "버전 정보",
-                        subtitle = "1.0.0 (최신버전)",
-                        onClick = { showDetailDialog = "버전 정보" }
-                    )
-                    SettingItem(
-                        icon = Icons.Default.BugReport,
-                        title = "문의하기 / 피드백",
-                        onClick = { showDetailDialog = "문의하기" }
-                    )
-                    SettingItem(
-                        icon = Icons.Default.Description,
-                        title = "오픈소스 라이선스",
-                        onClick = { showDetailDialog = "오픈소스 라이선스" }
-                    )
-                }
-            }
-
-            // 계정 관리 버튼
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    TextButton(
-                        onClick = { viewModel.signOut { onNavigateToLogin() } },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("로그아웃", color = Color.Gray, fontWeight = FontWeight.Medium)
-                    }
-                    TextButton(
-                        onClick = { viewModel.deleteAccount { onNavigateToLogin() } },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("회원탈퇴", color = Color.Red.copy(alpha = 0.6f), fontWeight = FontWeight.Medium)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "com.han.tripmate",
-                        fontSize = 11.sp,
-                        color = Color.LightGray,
-                        letterSpacing = 1.sp
-                    )
-                }
-                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }
