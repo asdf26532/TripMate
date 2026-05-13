@@ -22,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.han.tripmate.ui.navigation.Routes
 import com.han.tripmate.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
+    navController: androidx.navigation.NavHostController,
     onNavigateToLogin: () -> Unit
 ) {
     var showDetailDialog by remember { mutableStateOf<String?>(null) }
@@ -129,6 +131,17 @@ fun SettingsScreen(
                             icon = Icons.Default.Description,
                             title = "오픈소스 라이선스",
                             onClick = { showDetailDialog = "오픈소스 라이선스" }
+                        )
+                    }
+                }
+
+                item {
+                    SettingSection(header = "활동 기록") {
+                        SettingItem(
+                            icon = Icons.Default.History,
+                            title = "내 여행 내역",
+                            subtitle = "전체 여행 지출 리포트 보기",
+                            onClick = { navController.navigate(Routes.TRAVEL_HISTORY) }
                         )
                     }
                 }
@@ -304,7 +317,7 @@ fun SettingItem(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    onClick: () -> Unit
+    onClick = { navController.navigate(Routes.TRAVEL_HISTORY) }
 ) {
     ListItem(
         modifier = Modifier.clickable { onClick() },

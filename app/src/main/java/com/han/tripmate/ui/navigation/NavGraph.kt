@@ -19,6 +19,7 @@ import com.han.tripmate.ui.screens.MainScreen
 import com.han.tripmate.ui.screens.PlanDetailScreen
 import com.han.tripmate.ui.screens.PlanMapScreen
 import com.han.tripmate.ui.screens.SignUpScreen
+import com.han.tripmate.ui.screens.TravelHistoryScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
@@ -167,5 +168,13 @@ fun TripMateNavGraph(navController: NavHostController) {
                 planViewModel = planViewModel
             )
         }
+
+        composable(Routes.TRAVEL_HISTORY) {
+            TravelHistoryScreen(
+                viewModel = planViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }

@@ -16,6 +16,7 @@ object Routes {
     const val CHAT_ROOM = "chat_screen/{guideId}"
     const val PLAN_MAP = "plan_map/{planId}"
     const val PLAN_DETAIL = "plan_detail/{planId}/{planTitle}"
+    const val TRAVEL_HISTORY = "travel_history"
 }
 sealed class BottomNavItem(
     val route: String,

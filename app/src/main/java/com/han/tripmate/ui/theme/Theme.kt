@@ -5,7 +5,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
 // 다크 모드용 색상 (다크 모드 지원할 때 수정)
 private val DarkColorScheme = darkColorScheme(
@@ -34,7 +33,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun TripMateTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // 다이나믹 컬러(기기 배경색 맞춤). 일단 false
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
