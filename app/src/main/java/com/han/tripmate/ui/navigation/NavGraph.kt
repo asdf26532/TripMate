@@ -18,6 +18,7 @@ import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
 import com.han.tripmate.ui.screens.PlanDetailScreen
 import com.han.tripmate.ui.screens.PlanMapScreen
+import com.han.tripmate.ui.screens.SettingsScreen
 import com.han.tripmate.ui.screens.SignUpScreen
 import com.han.tripmate.ui.screens.TravelHistoryScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
@@ -165,7 +166,19 @@ fun TripMateNavGraph(navController: NavHostController) {
                 planTitle = planTitle,
                 planId = planId,
                 itineraryList = itineraryList,
-                planViewModel = planViewModel
+                planViewModel = planViewModel,
+                navController = navController
+            )
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                navController = navController,
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 

@@ -14,5 +14,6 @@ data class Plan(
     val memo: String = "",
     val expense: Int = 0,
     val authorId: String = "",
-    val order: Int = 0
+    val order: Int = 0,
+    val totalExpense: Long = 0L
 )

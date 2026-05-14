@@ -317,7 +317,7 @@ fun SettingItem(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
-    onClick = { navController.navigate(Routes.TRAVEL_HISTORY) }
+    onClick: () -> Unit
 ) {
     ListItem(
         modifier = Modifier.clickable { onClick() },

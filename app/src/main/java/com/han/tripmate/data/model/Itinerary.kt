@@ -7,5 +7,7 @@ data class Itinerary(
     val memo: String = "",
     val location: String = "",
     val lat: Double = 0.0,
-    val lng: Double = 0.0
+    val lng: Double = 0.0,
+    val cost: Long = 0L,
+    val category: String = "기타"
 )

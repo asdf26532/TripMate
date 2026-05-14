@@ -272,4 +272,20 @@ class PlanViewModel : ViewModel() {
         }
     }
 
+    fun calculateAndSyncTotalExpense(planId: String, itineraries: List<Itinerary>) {
+        val total = itineraries.sumOf { it.cost }
+
+        viewModelScope.launch {
+            try {
+                db.collection("users")
+                    .document(auth.currentUser?.uid ?: return@launch)
+                    .collection("plans")
+                    .document(planId)
+                    .update("totalExpense", total)
+            } catch (e: Exception) {
+                // 에러 처리
+            }
+        }
+    }
+
 }
