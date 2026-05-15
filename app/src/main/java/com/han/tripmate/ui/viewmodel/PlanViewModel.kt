@@ -27,6 +27,7 @@ import java.util.Locale
 import com.han.tripmate.ui.util.UiState
 import kotlinx.coroutines.tasks.await
 import android.util.Log
+import com.google.firebase.firestore.FirebaseFirestore
 import com.han.tripmate.data.model.Itinerary
 
 class PlanViewModel : ViewModel() {
@@ -34,6 +35,7 @@ class PlanViewModel : ViewModel() {
     private val planRepository = PlanRepository()
     private val imageRepository = ImageRepository()
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     private val _uiState = MutableStateFlow<UiState<String>>(UiState.Idle)
     val uiState: StateFlow<UiState<String>> = _uiState.asStateFlow()
@@ -209,17 +211,24 @@ class PlanViewModel : ViewModel() {
 
     fun getDistanceString(start: Itinerary, end: Itinerary): String {
         val startLoc = android.location.Location("start").apply {
+            latitude = start.lat
+            longitude = start.lng
         }
+
         val endLoc = android.location.Location("end").apply {
             latitude = end.lat
             longitude = end.lng
         }
 
         val distanceInMeters = startLoc.distanceTo(endLoc)
-        return if (distanceInMeters >= 1000) {
-            String.format("%.1fkm", distanceInMeters / 1000)
-        } else {
-            "${distanceInMeters.toInt()}m"
+
+        return when {
+            distanceInMeters >= 1000 -> {
+                String.format("%.1fkm", distanceInMeters / 1000)
+            }
+            else -> {
+                "${distanceInMeters.toInt()}m"
+            }
         }
     }
 
@@ -242,7 +251,6 @@ class PlanViewModel : ViewModel() {
     fun addItineraryWithLocation(context: Context, planId: String, title: String, time: String, memo: String) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-
             val latLng = getLatLngFromAddress(context, title)
 
             val newItinerary = Itinerary(
@@ -255,7 +263,12 @@ class PlanViewModel : ViewModel() {
 
             val success = planRepository.addItinerary(planId, newItinerary)
             if (success) {
-                loadItineraries(planId)
+
+                planRepository.getItineraries(planId) { list ->
+                    _itineraryList.value = list
+                    sortItinerariesByTime()
+                    calculateAndSyncTotalExpense(planId, list)
+                }
                 _uiState.value = UiState.Success("일정이 추가되었습니다.")
             } else {
                 _uiState.value = UiState.Error("저장 실패")
@@ -267,7 +280,11 @@ class PlanViewModel : ViewModel() {
         viewModelScope.launch {
             val success = planRepository.deleteItinerary(planId, itineraryId)
             if (success) {
-                loadItineraries(planId)
+
+                planRepository.getItineraries(planId) { list ->
+                    _itineraryList.value = list
+                    calculateAndSyncTotalExpense(planId, list)
+                }
             }
         }
     }
@@ -277,15 +294,19 @@ class PlanViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                db.collection("users")
-                    .document(auth.currentUser?.uid ?: return@launch)
-                    .collection("plans")
+
+                db.collection("plans")
                     .document(planId)
                     .update("totalExpense", total)
+                    .addOnSuccessListener {
+                        Log.d("PlanViewModel", "지출 합산 업데이트 성공: $total")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("PlanViewModel", "지출 업데이트 실패: ${e.message}")
+                    }
             } catch (e: Exception) {
-                // 에러 처리
+                Log.e("PlanViewModel", "에러 발생: ${e.localizedMessage}")
             }
         }
     }
-
 }
