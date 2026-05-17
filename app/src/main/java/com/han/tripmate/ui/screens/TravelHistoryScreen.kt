@@ -1,6 +1,7 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -128,6 +129,9 @@ fun TravelHistoryScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable {
+                            navController.navigate("travel_expense_detail/${plan.id}/${plan.title}")
+                        }
                             .padding(vertical = 4.dp)
                     ) {
                         Row(

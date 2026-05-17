@@ -18,6 +18,7 @@ object Routes {
     const val PLAN_DETAIL = "plan_detail/{planId}/{planTitle}"
     const val SETTINGS = "settings"
     const val TRAVEL_HISTORY = "travel_history"
+    const val TRAVEL_EXPENSE_DETAIL = "travel_expense_detail/{planId}/{planTitle}"
 }
 sealed class BottomNavItem(
     val route: String,

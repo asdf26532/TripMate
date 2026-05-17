@@ -189,5 +189,23 @@ fun TripMateNavGraph(navController: NavHostController) {
             )
         }
 
+        composable(
+            route = Routes.TRAVEL_EXPENSE_DETAIL,
+            arguments = listOf(
+                navArgument("planId") { type = NavType.StringType },
+                navArgument("planTitle") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val planId = backStackEntry.arguments?.getString("planId") ?: ""
+            val planTitle = backStackEntry.arguments?.getString("planTitle") ?: ""
+
+            TravelExpenseDetailScreen(
+                planId = planId,
+                planTitle = planTitle,
+                viewModel = planViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }
