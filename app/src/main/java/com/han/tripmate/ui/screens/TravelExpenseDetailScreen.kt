@@ -1,5 +1,6 @@
 package com.han.tripmate.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.PlanViewModel
+import com.han.tripmate.ui.theme.CategoryStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,41 +90,87 @@ fun TravelExpenseDetailScreen(
             } else {
                 items(categoryExpenses) { (category, cost) ->
                     val ratio = if (totalExpense > 0) cost.toFloat() / totalExpense else 0f
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    val style = CategoryStyle.fromCategory(category)
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(category, fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                            Text("${String.format("%,d", cost)}원 (${(ratio * 100).toInt()}%)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = style.icon,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = category,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                            Text(
+                                text = "${String.format("%,d", cost)}원 (${(ratio * 100).toInt()}%)",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = style.color
+                            )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
                         LinearProgressIndicator(
                             progress = { ratio },
                             modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                            color = MainBlue,
-                            trackColor = Color.LightGray.copy(alpha = 0.2f)
+                            color = style.color,
+                            trackColor = style.color.copy(alpha = 0.1f)
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }
-
 
             item {
                 Text("상세 지출 내역", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             }
 
             items(itineraries.filter { it.cost > 0 }) { itinerary ->
+                val style = CategoryStyle.fromCategory(itinerary.category)
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(itinerary.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                        Text(itinerary.category.ifBlank { "기타" }, fontSize = 12.sp, color = Color.Gray)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(style.color.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(style.icon, fontSize = 14.sp)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(itinerary.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                            Text(itinerary.category.ifBlank { "기타" }, fontSize = 12.sp, color = Color.Gray)
+                        }
                     }
-                    Text("₩ ${String.format("%,d", itinerary.cost)}", fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text(
+                        "₩ ${String.format("%,d", itinerary.cost)}",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray
+                    )
                 }
                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.2f))
             }
