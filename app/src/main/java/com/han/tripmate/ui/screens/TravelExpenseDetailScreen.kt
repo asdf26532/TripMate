@@ -1,8 +1,10 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +39,13 @@ fun TravelExpenseDetailScreen(
     val itineraries by viewModel.itineraryList.collectAsState()
     val totalExpense = itineraries.sumOf { it.cost }
 
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
+    val availableCategories = remember(itineraries) {
+        itineraries.filter { it.cost > 0 }
+            .map { it.category.ifBlank { "기타" }.trim() }
+            .distinct()
+    }
 
     val categoryExpenses = itineraries.groupBy { it.category.ifBlank { "기타" } }
         .mapValues { entry -> entry.value.sumOf { it.cost } }
@@ -135,45 +144,101 @@ fun TravelExpenseDetailScreen(
                 }
             }
 
-            item {
-                Text("상세 지출 내역", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-            }
+            if (availableCategories.isNotEmpty()) {
+                item {
+                    Column {
+                        Text("내역 필터", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
 
-            items(itineraries.filter { it.cost > 0 }) { itinerary ->
-                val style = CategoryStyle.fromCategory(itinerary.category)
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(style.color.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(style.icon, fontSize = 14.sp)
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(itinerary.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                            Text(itinerary.category.ifBlank { "기타" }, fontSize = 12.sp, color = Color.Gray)
+                            // 전체보기 칩
+                            item {
+                                FilterChip(
+                                    selected = selectedCategory == null,
+                                    onClick = { selectedCategory = null },
+                                    label = { Text("전체") }
+                                )
+                            }
+
+                            // 개별 카테고리 칩 목록
+                            items(availableCategories) { category ->
+                                val style = CategoryStyle.fromCategory(category)
+                                val isSelected = selectedCategory == elegantTrim(category)
+
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedCategory = if (isSelected) null else elegantTrim(category)
+                                    },
+                                    label = { Text("${style.icon} $category") }
+                                )
+                            }
                         }
                     }
-                    Text(
-                        "₩ ${String.format("%,d", itinerary.cost)}",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray
-                    )
                 }
-                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.2f))
+            }
+
+            // 4. 타이틀 세팅
+            item {
+                val headerText = if (selectedCategory == null) "상세 지출 내역" else "[$selectedCategory] 지출 내역"
+                Text(headerText, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            }
+
+            // [수정 연결] 5. 선택된 카테고리에 맞는 리스트만 필터링하여 노출
+            val filteredItineraries = itineraries.filter { itinerary ->
+                val isCostValid = itinerary.cost > 0
+                val matchesCategory = selectedCategory == null || itinerary.category.ifBlank { "기타" }.trim() == selectedCategory
+                isCostValid && matchesCategory
+            }
+
+            if (filteredItineraries.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                        Text("선택된 카테고리의 지출 내역이 없습니다.", color = Color.Gray, fontSize = 14.sp)
+                    }
+                }
+            } else {
+                items(filteredItineraries) { itinerary ->
+                    val style = CategoryStyle.fromCategory(itinerary.category)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(style.color.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(style.icon, fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(itinerary.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                Text(itinerary.category.ifBlank { "기타" }, fontSize = 12.sp, color = Color.Gray)
+                            }
+                        }
+                        Text(
+                            "₩ ${String.format("%,d", itinerary.cost)}",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray
+                        )
+                    }
+                    HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.2f))
+                }
             }
         }
     }
 }
+
+private fun elegantTrim(value: String): String = value.trim()
