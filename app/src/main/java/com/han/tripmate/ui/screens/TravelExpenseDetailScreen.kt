@@ -19,9 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 import com.han.tripmate.ui.theme.CategoryStyle
+import com.han.tripmate.ui.theme.MainBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +94,36 @@ fun TravelExpenseDetailScreen(
 
             if (categoryExpenses.isEmpty()) {
                 item {
-                    Text("등록된 지출 기록이 없습니다.", color = Color.Gray, fontSize = 14.sp)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Gray.copy(alpha = 0.05f)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text("📊", fontSize = 48.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "아직 등록된 소비 지출이 없습니다.",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.DarkGray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "일정에 비용을 추가하면 통계가 계산됩니다.",
+                                fontSize = 13.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 }
             } else {
                 items(categoryExpenses) { (category, cost) ->
@@ -181,13 +210,12 @@ fun TravelExpenseDetailScreen(
                 }
             }
 
-            // 4. 타이틀 세팅
             item {
                 val headerText = if (selectedCategory == null) "상세 지출 내역" else "[$selectedCategory] 지출 내역"
                 Text(headerText, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             }
 
-            // [수정 연결] 5. 선택된 카테고리에 맞는 리스트만 필터링하여 노출
+
             val filteredItineraries = itineraries.filter { itinerary ->
                 val isCostValid = itinerary.cost > 0
                 val matchesCategory = selectedCategory == null || itinerary.category.ifBlank { "기타" }.trim() == selectedCategory
@@ -196,8 +224,30 @@ fun TravelExpenseDetailScreen(
 
             if (filteredItineraries.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                        Text("선택된 카테고리의 지출 내역이 없습니다.", color = Color.Gray, fontSize = 14.sp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("🔍", fontSize = 40.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "선택하신 카테고리의 내역이 없습니다.",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+
+                        TextButton(
+                            onClick = { selectedCategory = null },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MainBlue)
+                        ) {
+                            Text("전체 내역 보기", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             } else {
