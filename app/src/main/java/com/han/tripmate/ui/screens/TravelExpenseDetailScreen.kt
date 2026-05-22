@@ -40,6 +40,7 @@ fun TravelExpenseDetailScreen(
     val totalExpense = itineraries.sumOf { it.cost }
 
     var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var isExchangeOpen by remember { mutableStateOf(false) }
 
     val availableCategories = remember(itineraries) {
         itineraries.filter { it.cost > 0 }
@@ -83,12 +84,61 @@ fun TravelExpenseDetailScreen(
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
-                            Text(
-                                text = "₩ ${String.format("%,d", totalExpense)}",
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "₩ ${String.format("%,d", totalExpense)}",
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+
+
+                                TextButton(
+                                    onClick = { isExchangeOpen = !isExchangeOpen },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                ) {
+                                    Text(
+                                        text = if (isExchangeOpen) "닫기 ✕" else "외화 환산 🌐",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (isExchangeOpen && totalExpense > 0) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                HorizontalDivider(
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // 대략적인 고정 베이스 환율 계산 매핑 (추후 API 연동 확장)
+                                val usdExchange = totalExpense / 1350.0
+                                val jpyExchange = (totalExpense / 9.0)
+                                val eurExchange = totalExpense / 1450.0
+
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("🇺🇸 미국 달러 (USD)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                                        Text("$${String.format("%.2f", usdExchange)}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("🇯🇵 일본 엔화 (JPY)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                                        Text("¥${String.format("%,d", jpyExchange.toInt())}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("🇪🇺 유럽 유로 (EUR)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                                        Text("€${String.format("%.2f", eurExchange)}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    }
+                                }
+                            }
                         }
                     }
 
