@@ -1,0 +1,188 @@
+package com.han.tripmate.ui.screens
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.han.tripmate.data.model.PackingItem
+import com.han.tripmate.ui.theme.MainBlue
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TravelPackingScreen(
+    onBack: () -> Unit = {}
+) {
+    // 샘플
+    var packingList by remember {
+        mutableStateOf(
+            listOf(
+                PackingItem("1", "여권 및 비자", "필수품"),
+                PackingItem("2", "보조배터리 및 케이블", "전자기기"),
+                PackingItem("3", "변환 플러그 (돼지코)", "전자기기"),
+                PackingItem("4", "상비약 (감기약, 반창고)", "필수품"),
+                PackingItem("5", "스킨케어 및 선크림", "세면/화장품"),
+                PackingItem("6", "편한 운동화", "의류"),
+                PackingItem("7", "현지 유심 / 이심(eSIM)", "필수품")
+            )
+        )
+    }
+
+    var newItemName by remember { mutableStateOf("") }
+    val selectedCategory by remember { mutableStateOf("필수품") }
+
+    val packedCount = packingList.count { it.isPacked }
+    val totalCount = packingList.size
+    val progress = if (totalCount > 0) packedCount.toFloat() / totalCount else 0f
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("짐 싸기 체크리스트", fontWeight = FontWeight.Bold) }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("나의 짐 싸기 진척도", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text("$packedCount / $totalCount", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(5.dp)),
+                            color = MainBlue,
+                            trackColor = MainBlue.copy(alpha = 0.1f)
+                        )
+                    }
+                }
+            }
+
+
+            item {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = newItemName,
+                            onValueChange = { newItemName = it },
+                            placeholder = { Text("예: 면도기, 선글라스", fontSize = 14.sp) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (newItemName.isNotBlank()) {
+                                    packingList = packingList + PackingItem(
+                                        id = System.currentTimeMillis().toString(),
+                                        name = newItemName.trim(),
+                                        category = selectedCategory
+                                    )
+                                    newItemName = ""
+                                }
+                            },
+                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "추가")
+                        }
+                    }
+                }
+            }
+
+            val groupedItems = packingList.groupBy { it.category }
+
+            groupedItems.forEach { (category, items) ->
+                item {
+                    Text(
+                        text = category,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    )
+                }
+
+                items(items, key = { it.id }) { item ->
+                    val backgroundColor by animateColorAsState(
+                        targetValue = if (item.isPacked) Color.Gray.copy(alpha = 0.05f) else Color.White,
+                        label = "cardBg"
+                    )
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                packingList = packingList.map {
+                                    if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
+                                }
+                            },
+                        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (item.isPacked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                contentDescription = "체크",
+                                tint = if (item.isPacked) MainBlue else Color.Gray
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = item.name,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (item.isPacked) Color.Gray else Color.DarkGray,
+                                textDecoration = if (item.isPacked) TextDecoration.LineThrough else TextDecoration.None
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
