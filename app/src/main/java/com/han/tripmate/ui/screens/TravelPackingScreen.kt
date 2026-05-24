@@ -1,11 +1,14 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.horizontalScroll
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,7 +32,7 @@ import com.han.tripmate.ui.theme.MainBlue
 fun TravelPackingScreen(
     onBack: () -> Unit = {}
 ) {
-    // 샘플
+    /*
     var packingList by remember {
         mutableStateOf(
             listOf(
@@ -42,10 +45,39 @@ fun TravelPackingScreen(
                 PackingItem("7", "현지 유심 / 이심(eSIM)", "필수품")
             )
         )
-    }
+    }*/
 
+    val defaultItems = listOf(
+        PackingItem("1", "여권 및 비자", "필수품"),
+        PackingItem("2", "보조배터리 및 케이블", "전자기기"),
+        PackingItem("3", "변환 플러그 (돼지코)", "전자기기")
+    )
+
+    var packingList by remember { mutableStateOf(defaultItems) }
     var newItemName by remember { mutableStateOf("") }
     val selectedCategory by remember { mutableStateOf("필수품") }
+
+    var selectedTemplate by remember { mutableStateOf("기본") }
+
+    val templates = mapOf(
+        "기본" to listOf(),
+        "🏖️ 휴양지/물놀이" to listOf(
+            PackingItem("t1", "수영복 및 래시가드", "의류"),
+            PackingItem("t2", "방수팩", "필수품"),
+            PackingItem("t3", "선글라스", "필수품"),
+            PackingItem("t4", "비치타월", "기타")
+        ),
+        "🏂 겨울/스키장" to listOf(
+            PackingItem("t5", "핫팩/방한용품", "필수품"),
+            PackingItem("t6", "목도리 및 장갑", "의류"),
+            PackingItem("t7", "보습 크림/립밤", "세면/화장품")
+        ),
+        "💼 비즈니스/출장" to listOf(
+            PackingItem("t8", "셔츠 및 정장", "의류"),
+            PackingItem("t9", "노트북 및 충전기", "전자기기"),
+            PackingItem("t10", "명함", "필수품")
+        )
+    )
 
     val packedCount = packingList.count { it.isPacked }
     val totalCount = packingList.size
@@ -92,6 +124,41 @@ fun TravelPackingScreen(
                 }
             }
 
+            item {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    Text(
+                        text = "추천 템플릿 추가",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        templates.keys.forEach { theme ->
+                            val isSelected = selectedTemplate == theme
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedTemplate = theme
+
+                                    val themeItems = templates[theme] ?: listOf()
+                                    packingList = defaultItems + themeItems
+                                },
+                                label = { Text(theme, fontSize = 12.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MainBlue.copy(alpha = 0.15f),
+                                    selectedLabelColor = MainBlue
+                                )
+                            )
+                        }
+                    }
+                }
+            }
 
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
