@@ -32,20 +32,6 @@ import com.han.tripmate.ui.theme.MainBlue
 fun TravelPackingScreen(
     onBack: () -> Unit = {}
 ) {
-    /*
-    var packingList by remember {
-        mutableStateOf(
-            listOf(
-                PackingItem("1", "여권 및 비자", "필수품"),
-                PackingItem("2", "보조배터리 및 케이블", "전자기기"),
-                PackingItem("3", "변환 플러그 (돼지코)", "전자기기"),
-                PackingItem("4", "상비약 (감기약, 반창고)", "필수품"),
-                PackingItem("5", "스킨케어 및 선크림", "세면/화장품"),
-                PackingItem("6", "편한 운동화", "의류"),
-                PackingItem("7", "현지 유심 / 이심(eSIM)", "필수품")
-            )
-        )
-    }*/
 
     val defaultItems = listOf(
         PackingItem("1", "여권 및 비자", "필수품"),
@@ -56,8 +42,9 @@ fun TravelPackingScreen(
     var packingList by remember { mutableStateOf(defaultItems) }
     var newItemName by remember { mutableStateOf("") }
     val selectedCategory by remember { mutableStateOf("필수품") }
-
     var selectedTemplate by remember { mutableStateOf("기본") }
+
+    var isPackedSectionExpanded by remember { mutableStateOf(false) }
 
     val templates = mapOf(
         "기본" to listOf(),
@@ -196,13 +183,14 @@ fun TravelPackingScreen(
                 }
             }
 
-            val groupedItems = packingList.groupBy { it.category }
+            val unpackedItems = packingList.filter { !it.isPacked }
+            val groupedUnpacked = unpackedItems.groupBy { it.category }
 
-            groupedItems.forEach { (category, items) ->
+            groupedUnpacked.forEach { (category, items) ->
                 item {
                     Text(
                         text = category,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray,
                         modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
@@ -210,46 +198,99 @@ fun TravelPackingScreen(
                 }
 
                 items(items, key = { it.id }) { item ->
-                    val backgroundColor by animateColorAsState(
-                        targetValue = if (item.isPacked) Color.Gray.copy(alpha = 0.05f) else Color.White,
-                        label = "cardBg"
+                    PackingItemRow(
+                        item = item,
+                        onToggle = {
+                            packingList = packingList.map {
+                                if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
+                            }
+                        }
                     )
+                }
+            }
 
-                    Card(
+            val packedItems = packingList.filter { it.isPacked }
+
+            if (packedItems.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable { isPackedSectionExpanded = !isPackedSectionExpanded }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "체크한 항목 (${packedItems.size})",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MainBlue
+                        )
+                        Text(
+                            text = if (isPackedSectionExpanded) "접기 ▲" else "펼치기 ▼",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                if (isPackedSectionExpanded) {
+                    items(packedItems, key = { it.id }) { item ->
+                        PackingItemRow(
+                            item = item,
+                            onToggle = {
                                 packingList = packingList.map {
                                     if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
                                 }
-                            },
-                        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray.copy(alpha = 0.4f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (item.isPacked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                contentDescription = "체크",
-                                tint = if (item.isPacked) MainBlue else Color.Gray
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = item.name,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (item.isPacked) Color.Gray else Color.DarkGray,
-                                textDecoration = if (item.isPacked) TextDecoration.LineThrough else TextDecoration.None
-                            )
-                        }
+                            }
+                        )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun PackingItemRow(
+    item: PackingItem,
+    onToggle: () -> Unit
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (item.isPacked) Color.Gray.copy(alpha = 0.05f) else Color.White,
+        label = "cardBg"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggle() },
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (item.isPacked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                contentDescription = "체크",
+                tint = if (item.isPacked) MainBlue else Color.Gray
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = item.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (item.isPacked) Color.Gray else Color.DarkGray,
+                textDecoration = if (item.isPacked) TextDecoration.LineThrough else TextDecoration.None
+            )
         }
     }
 }
