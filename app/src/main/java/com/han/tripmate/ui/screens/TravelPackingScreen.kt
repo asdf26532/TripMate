@@ -204,6 +204,9 @@ fun TravelPackingScreen(
                             packingList = packingList.map {
                                 if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
                             }
+                        },
+                        onDelete = {
+                            packingList = packingList.filter { it.id != item.id }
                         }
                     )
                 }
@@ -245,6 +248,9 @@ fun TravelPackingScreen(
                                 packingList = packingList.map {
                                     if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
                                 }
+                            },
+                            onDelete = {
+                                packingList = packingList.filter { it.id != item.id }
                             }
                         )
                     }
@@ -256,8 +262,9 @@ fun TravelPackingScreen(
 
 @Composable
 fun PackingItemRow(
-    item: PackingItem,
-    onToggle: () -> Unit
+    item: com.han.tripmate.data.model.PackingItem,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (item.isPacked) Color.Gray.copy(alpha = 0.05f) else Color.White,
@@ -267,6 +274,7 @@ fun PackingItemRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 2.dp)
             .clickable { onToggle() },
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(12.dp),
@@ -275,22 +283,40 @@ fun PackingItemRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = if (item.isPacked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                contentDescription = "체크",
-                tint = if (item.isPacked) MainBlue else Color.Gray
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = item.name,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (item.isPacked) Color.Gray else Color.DarkGray,
-                textDecoration = if (item.isPacked) TextDecoration.LineThrough else TextDecoration.None
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = if (item.isPacked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                    contentDescription = "체크",
+                    tint = if (item.isPacked) MainBlue else Color.Gray
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = item.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (item.isPacked) Color.Gray else Color.DarkGray,
+                    textDecoration = if (item.isPacked) TextDecoration.LineThrough else TextDecoration.None
+                )
+            }
+
+            IconButton(
+                onClick = { onDelete() },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Text(
+                    text = "✕",
+                    fontSize = 14.sp,
+                    color = Color.Gray.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
