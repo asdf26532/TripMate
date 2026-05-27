@@ -24,22 +24,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.han.tripmate.data.model.PackingItem
 import com.han.tripmate.ui.theme.MainBlue
+import com.han.tripmate.ui.viewmodel.TravelPackingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TravelPackingScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    packingViewModel: TravelPackingViewModel = viewModel()
 ) {
 
-    val defaultItems = listOf(
-        PackingItem("1", "여권 및 비자", "필수품"),
-        PackingItem("2", "보조배터리 및 케이블", "전자기기"),
-        PackingItem("3", "변환 플러그 (돼지코)", "전자기기")
-    )
+    val packingList by packingViewModel.packingList.collectAsState()
 
-    var packingList by remember { mutableStateOf(defaultItems) }
     var newItemName by remember { mutableStateOf("") }
     val selectedCategory by remember { mutableStateOf("필수품") }
     var selectedTemplate by remember { mutableStateOf("기본") }
@@ -134,7 +132,7 @@ fun TravelPackingScreen(
                                     selectedTemplate = theme
 
                                     val themeItems = templates[theme] ?: listOf()
-                                    packingList = defaultItems + themeItems
+                                    packingViewModel.loadTemplate(themeItems)
                                 },
                                 label = { Text(theme, fontSize = 12.sp) },
                                 colors = FilterChipDefaults.filterChipColors(
@@ -165,11 +163,7 @@ fun TravelPackingScreen(
                         Button(
                             onClick = {
                                 if (newItemName.isNotBlank()) {
-                                    packingList = packingList + PackingItem(
-                                        id = System.currentTimeMillis().toString(),
-                                        name = newItemName.trim(),
-                                        category = selectedCategory
-                                    )
+                                    packingViewModel.addItem(newItemName, selectedCategory)
                                     newItemName = ""
                                 }
                             },
@@ -200,14 +194,8 @@ fun TravelPackingScreen(
                 items(items, key = { it.id }) { item ->
                     PackingItemRow(
                         item = item,
-                        onToggle = {
-                            packingList = packingList.map {
-                                if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
-                            }
-                        },
-                        onDelete = {
-                            packingList = packingList.filter { it.id != item.id }
-                        }
+                        onToggle = { packingViewModel.toggleItemPacked(item.id) },
+                        onDelete = { packingViewModel.deleteItem(item.id) }
                     )
                 }
             }
@@ -244,14 +232,8 @@ fun TravelPackingScreen(
                     items(packedItems, key = { it.id }) { item ->
                         PackingItemRow(
                             item = item,
-                            onToggle = {
-                                packingList = packingList.map {
-                                    if (it.id == item.id) it.copy(isPacked = !it.isPacked) else it
-                                }
-                            },
-                            onDelete = {
-                                packingList = packingList.filter { it.id != item.id }
-                            }
+                            onToggle = { packingViewModel.toggleItemPacked(item.id) },
+                            onDelete = { packingViewModel.deleteItem(item.id) }
                         )
                     }
                 }
@@ -262,7 +244,7 @@ fun TravelPackingScreen(
 
 @Composable
 fun PackingItemRow(
-    item: com.han.tripmate.data.model.PackingItem,
+    item: PackingItem,
     onToggle: () -> Unit,
     onDelete: () -> Unit
 ) {
