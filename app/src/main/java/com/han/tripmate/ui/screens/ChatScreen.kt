@@ -20,7 +20,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,13 +30,16 @@ import androidx.compose.ui.unit.sp
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.ChatViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.han.tripmate.ui.util.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    guideId: String,
+    otherUserId: String,
+    otherNickname: String,
+    otherProfileUrl: String,
     viewModel: ChatViewModel = viewModel(),
     onBack: () -> Unit
 ) {
@@ -46,7 +51,8 @@ fun ChatScreen(
 
     val auth = remember { FirebaseAuth.getInstance() }
     val myId = auth.currentUser?.uid ?: ""
-    val chatRoomId = "room_${myId}_${guideId}"
+
+    val chatRoomId = viewModel.getChatRoomId(otherUserId)
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -55,7 +61,9 @@ fun ChatScreen(
     }
 
     LaunchedEffect(chatRoomId) {
-        viewModel.observeMessages(chatRoomId)
+        if (chatRoomId.isNotBlank()) {
+            viewModel.observeMessages(chatRoomId)
+        }
     }
 
     LaunchedEffect(uiState) {
@@ -70,16 +78,25 @@ fun ChatScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = Color.LightGray) {}
+                        AsyncImage(
+                            model = otherProfileUrl.ifEmpty { "https://via.placeholder.com/150" },
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color.LightGray),
+                            contentScale = ContentScale.Crop
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "$guideId 가이드", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(text = otherNickname, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
         bottomBar = {
