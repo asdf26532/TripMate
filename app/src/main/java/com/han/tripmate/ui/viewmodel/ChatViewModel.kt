@@ -44,6 +44,12 @@ class ChatViewModel : ViewModel() {
 
     fun resetUiState() { _uiState.value = UiState.Idle }
 
+    fun getChatRoomId(otherUserId: String): String {
+        val myId = auth.currentUser?.uid ?: return ""
+        val sortedIds = listOf(myId, otherUserId).sorted()
+        return "room_${sortedIds[0]}_${sortedIds[1]}"
+    }
+
     fun observeChatRoomList() {
         val uid = auth.currentUser?.uid ?: return
         roomListListener?.remove()
@@ -53,8 +59,8 @@ class ChatViewModel : ViewModel() {
     }
 
     fun observeMessages(chatRoomId: String) {
+        if (chatRoomId.isBlank()) return
         chatListener?.remove()
-
         chatListener = chatRepository.observeMessages(chatRoomId) { newMessages ->
             _messages.clear()
             _messages.addAll(newMessages)
@@ -77,7 +83,7 @@ class ChatViewModel : ViewModel() {
         )
 
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
+
             messageText = ""
 
             val success = chatRepository.sendMessage(chatRoomId, newMessage)
@@ -88,7 +94,6 @@ class ChatViewModel : ViewModel() {
                     "lastTimestamp" to timestamp
                 )
                 chatRepository.updateChatRoom(chatRoomId, roomUpdate)
-                _uiState.value = UiState.Idle
             } else {
                 _uiState.value = UiState.Error("메시지 전송 실패")
                 messageText = textToSend
@@ -99,6 +104,7 @@ class ChatViewModel : ViewModel() {
     // 이미지 업로드 및 전송
     fun uploadChatImage(chatRoomId: String, uri: Uri) {
         val uid = auth.currentUser?.uid ?: return
+        if (chatRoomId.isBlank()) return
 
         viewModelScope.launch {
             _uiState.value = UiState.Loading
