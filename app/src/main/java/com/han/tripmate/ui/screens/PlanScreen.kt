@@ -104,7 +104,6 @@ fun PlanScreen(
 
                 PlanSummaryCard(totalExpense = totalExpense, dayExpense = dayExpense, selectedDay = selectedDay)
 
-                // 2. [신규] 날짜 선택 탭
                 if (groupedPlans.isNotEmpty()) {
                     ScrollableTabRow(
                         selectedTabIndex = (groupedPlans.keys.sorted().indexOf(selectedDay)).coerceAtLeast(0),
