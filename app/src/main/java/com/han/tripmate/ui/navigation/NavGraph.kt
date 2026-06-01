@@ -20,6 +20,7 @@ import com.han.tripmate.ui.screens.PlanDetailScreen
 import com.han.tripmate.ui.screens.PlanMapScreen
 import com.han.tripmate.ui.screens.SettingsScreen
 import com.han.tripmate.ui.screens.SignUpScreen
+import com.han.tripmate.ui.screens.TravelExpenseDetailScreen
 import com.han.tripmate.ui.screens.TravelHistoryScreen
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.PlanViewModel
@@ -114,12 +115,21 @@ fun TripMateNavGraph(navController: NavHostController) {
 
         // 채팅방 화면
         composable(
-            route = Routes.CHAT_ROOM,
-            arguments = listOf(navArgument("guideId") { type = NavType.StringType })
+            route = "${Routes.CHAT_ROOM}/{otherUserId}/{otherNickname}/{otherProfileUrl}",
+            arguments = listOf(
+                navArgument("otherUserId") { type = NavType.StringType },
+                navArgument("otherNickname") { type = NavType.StringType },
+                navArgument("otherProfileUrl") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            val guideId = backStackEntry.arguments?.getString("guideId") ?: ""
+            val otherUserId = backStackEntry.arguments?.getString("otherUserId") ?: ""
+            val otherNickname = backStackEntry.arguments?.getString("otherNickname") ?: "사용자"
+            val otherProfileUrl = backStackEntry.arguments?.getString("otherProfileUrl") ?: ""
+
             ChatScreen(
-                guideId = guideId,
+                otherUserId = otherUserId,
+                otherNickname = otherNickname,
+                otherProfileUrl = if (otherProfileUrl == "default") "" else otherProfileUrl,
                 onBack = {
                     navController.popBackStack()
                 }
