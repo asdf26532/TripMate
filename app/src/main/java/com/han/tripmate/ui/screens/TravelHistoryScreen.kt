@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.PlanViewModel
 
@@ -28,6 +29,7 @@ import com.han.tripmate.ui.viewmodel.PlanViewModel
 @Composable
 fun TravelHistoryScreen(
     viewModel: PlanViewModel,
+    navController: NavController,
     onBack: () -> Unit
 ) {
     val plans by viewModel.plans.collectAsState()

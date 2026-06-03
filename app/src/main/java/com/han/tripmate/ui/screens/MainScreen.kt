@@ -74,18 +74,21 @@ fun MainScreen(
                             navController = navController
                         )
                     }
-                    1 -> ChatPreviewScreen(navController = navController)
+                    1 -> {
+                        ChatPreviewScreen(navController = navController)
+                    }
                     2 -> {
                         PlanScreen(
                             planViewModel = planViewModel,
                             onNavigateToMap = { planId ->
                                 navController.navigate("plan_map/$planId")
-                            }
+                            },
+                            navController = navController
                         )
                     }
                     3 -> {
                         SettingsScreen(
-                            viewModel = settingsViewModel,
+                            navController = navController,
                             onNavigateToLogin = {
                                 navController.navigate("login") {
                                     popUpTo("main") { inclusive = true }

@@ -195,6 +195,7 @@ fun TripMateNavGraph(navController: NavHostController) {
         composable(Routes.TRAVEL_HISTORY) {
             TravelHistoryScreen(
                 viewModel = planViewModel,
+                navController = navController,
                 onBack = { navController.popBackStack() }
             )
         }
