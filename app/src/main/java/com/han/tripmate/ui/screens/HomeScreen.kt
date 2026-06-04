@@ -2,10 +2,12 @@ package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +25,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -183,6 +187,85 @@ fun TravelerHome(
 }
 
 @Composable
+fun HomeGuideSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                text = "현지 전문가 추천",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "TripMate가 검증한 인기 가이드들을 만나보세요.",
+                fontSize = 13.sp,
+                color = Color.Gray
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 빌드업을 위한 가상 가이드 배열 생성
+            val tempGuides = listOf("김민준 가이드", "이서연 가이드", "박준영 가이드")
+
+            tempGuides.forEach { guideName ->
+                Card(
+                    modifier = Modifier.width(160.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.LightGray.copy(alpha = 0.4f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("프로필 사진", fontSize = 11.sp, color = Color.Gray)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+
+                        Text(
+                            text = guideName,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "프랑스 파리 역사/미술 전문",
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun GuideDashboard() {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -202,7 +285,7 @@ fun GuideDashboard() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 2. 서비스 관리 메뉴
+        // 서비스 관리 메뉴
         Text(text = "내 서비스 관리", fontWeight = FontWeight.Bold)
 
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -376,6 +459,20 @@ fun UpcomingTripCard(plan: Plan) {
                 fontSize = 14.sp
             )
             // 날짜 표시 로직 추가 필요
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeGuideSectionPreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF8F9FA))
+        ) {
+            HomeGuideSection()
         }
     }
 }
