@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
+import com.han.tripmate.data.model.LocalGuideItem
 import com.han.tripmate.data.model.Plan
 import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.theme.MainBlue
@@ -188,6 +189,13 @@ fun TravelerHome(
 
 @Composable
 fun HomeGuideSection() {
+
+    val localGuides = listOf(
+        LocalGuideItem("김민준 가이드", "프랑스 파리", "역사/미술", 4.9, 128, "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"),
+        LocalGuideItem("이서연 가이드", "일본 도쿄", "맛집/쇼핑", 4.8, 94, "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"),
+        LocalGuideItem("박준영 가이드", "이탈리아 로마", "스냅촬영", 5.0, 62, "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150")
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -206,58 +214,97 @@ fun HomeGuideSection() {
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 빌드업을 위한 가상 가이드 배열 생성
-            val tempGuides = listOf("김민준 가이드", "이서연 가이드", "박준영 가이드")
-
-            tempGuides.forEach { guideName ->
+            localGuides.forEach { guide ->
                 Card(
                     modifier = Modifier.width(160.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-
-                        Box(
+                    Column {
+                        AsyncImage(
+                            model = guide.profileUrl,
+                            contentDescription = guide.name,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(100.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.LightGray.copy(alpha = 0.4f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("프로필 사진", fontSize = 11.sp, color = Color.Gray)
+                                .height(110.dp)
+                                .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp))
+                                .background(Color.LightGray.copy(alpha = 0.3f)),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            ) {
+                                Surface(
+                                    color = MainBlue.copy(alpha = 0.08f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = guide.location,
+                                        fontSize = 10.sp,
+                                        color = MainBlue,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Surface(
+                                    color = Color(0xFF4CAF50).copy(alpha = 0.08f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = guide.tag,
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF388E3C),
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = guide.name,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFB300),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = " ${guide.rating}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.DarkGray
+                                )
+                                Text(
+                                    text = " (${guide.reviewCount})",
+                                    fontSize = 11.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-
-                        Text(
-                            text = guideName,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "프랑스 파리 역사/미술 전문",
-                            fontSize = 11.sp,
-                            color = Color.Gray,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }
@@ -458,7 +505,6 @@ fun UpcomingTripCard(plan: Plan) {
                 color = Color.White.copy(alpha = 0.8f),
                 fontSize = 14.sp
             )
-            // 날짜 표시 로직 추가 필요
         }
     }
 }
