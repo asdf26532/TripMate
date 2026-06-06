@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.data.model.LocalGuideItem
@@ -65,7 +66,7 @@ fun HomeScreen(authViewModel: AuthViewModel,
                 Icon(Icons.Default.Add, contentDescription = "가이드 등록")
             }
         },
-        floatingActionButtonPosition = FabPosition.End // 오른쪽 하단 배치
+        floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             TravelerHome(authViewModel, travelViewModel, navController)
@@ -103,11 +104,12 @@ fun TravelerHome(
         item {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
-                    text = "${user?.nickname ?: "회원" }님, 현지 전문가와 함께\n특별한 여행을 만들어보세요",
+                    text = "${user?.nickname ?: "회원"}님, 현지 전문가와 함께\n특별한 여행을 만들어보세요",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 32.sp,
-                    color = Color.Gray)
+                    color = Color.Gray
+                )
             }
         }
         // 인기 여행지
@@ -130,7 +132,6 @@ fun TravelerHome(
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
-        // 검색
         item {
             OutlinedTextField(
                 value = searchQuery,
@@ -171,24 +172,13 @@ fun TravelerHome(
         }
 
         item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(
-                    text = "현지 전문가 추천",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "TripMate가 검증한 가이드들을 만나보세요.",
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                )
-            }
+            HomeGuideSection(navController = navController)
         }
     }
 }
 
 @Composable
-fun HomeGuideSection() {
+fun HomeGuideSection(navController: NavHostController) {
 
     val localGuides = listOf(
         LocalGuideItem("김민준 가이드", "프랑스 파리", "역사/미술", 4.9, 128, "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"),
@@ -225,7 +215,11 @@ fun HomeGuideSection() {
         ) {
             localGuides.forEach { guide ->
                 Card(
-                    modifier = Modifier.width(160.dp),
+                    modifier = Modifier
+                        .width(160.dp)
+                        .clickable {
+                            navController.navigate("guide_matching/${guide.name}")
+                        },
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
@@ -512,13 +506,49 @@ fun UpcomingTripCard(plan: Plan) {
 @Preview(showBackground = true)
 @Composable
 fun HomeGuideSectionPreview() {
+    val fakeNavController = rememberNavController()
     MaterialTheme {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFFF8F9FA))
         ) {
-            HomeGuideSection()
+            HomeGuideSection(navController = fakeNavController)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+fun TravelerHomePreview() {
+    val fakeNavController = rememberNavController()
+    val fakeAuthViewModel: AuthViewModel = viewModel()
+    val fakeTravelViewModel: TravelViewModel = viewModel()
+
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFFF8F9FA)
+        ) {
+            TravelerHome(
+                authViewModel = fakeAuthViewModel,
+                travelViewModel = fakeTravelViewModel,
+                navController = fakeNavController
+            )
+        }
+    }
+}
+
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+fun GuideDashboardPreview() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFFF8F9FA)
+        ) {
+            GuideDashboard()
         }
     }
 }
