@@ -36,6 +36,12 @@ fun SettingsScreen(
     var showNameEditDialog by remember { mutableStateOf(false) }
     var tempName by remember { mutableStateOf("") }
 
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -103,7 +109,13 @@ fun SettingsScreen(
                         SettingItem(
                             icon = Icons.Default.Lock,
                             title = "비밀번호 변경",
-                            onClick = { showDetailDialog = "비밀번호 변경" }
+                            onClick = {
+                                currentPassword = ""
+                                newPassword = ""
+                                confirmPassword = ""
+                                passwordError = null
+                                showPasswordDialog = true
+                            }
                         )
                         SettingItem(
                             icon = Icons.Default.Security,
@@ -214,6 +226,68 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showNameEditDialog = false; viewModel.clearError() }) { Text("취소") }
+            }
+        )
+    }
+
+    if (showPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showPasswordDialog = false },
+            title = { Text("비밀번호 변경", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        label = { Text("현재 비밀번호") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("새 비밀번호 (6자 이상)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("새 비밀번호 확인") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    passwordError?.let {
+                        Text(it, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        when {
+                            currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty() -> {
+                                passwordError = "모든 항목을 입력해 주세요."
+                            }
+                            newPassword.length < 6 -> {
+                                passwordError = "새 비밀번호는 6자리 이상이어야 합니다."
+                            }
+                            newPassword != confirmPassword -> {
+                                passwordError = "새 비밀번호가 일치하지 않습니다."
+                            }
+                            else -> {
+                                passwordError = null
+                                showPasswordDialog = false
+                            }
+                        }
+                    }
+                ) {
+                    Text("변경하기")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPasswordDialog = false }) { Text("취소") }
             }
         )
     }
