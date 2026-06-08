@@ -42,6 +42,10 @@ fun SettingsScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf<String?>(null) }
 
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    val languageOptions = listOf("한국어", "English", "日本語")
+    var selectedLanguage by remember { mutableStateOf("한국어") }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -97,8 +101,8 @@ fun SettingsScreen(
                         SettingItem(
                             icon = Icons.Default.Language,
                             title = "언어 설정",
-                            subtitle = "한국어",
-                            onClick = { showDetailDialog = "언어 설정" }
+                            subtitle = selectedLanguage,
+                            onClick = { showLanguageDialog = true }
                         )
                     }
                 }
@@ -288,6 +292,43 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showPasswordDialog = false }) { Text("취소") }
+            }
+        )
+    }
+
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text("언어 설정", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    languageOptions.forEach { language ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedLanguage = language }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (selectedLanguage == language),
+                                onClick = { selectedLanguage = language }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = language, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showLanguageDialog = false
+                }) {
+                    Text("적용")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLanguageDialog = false }) { Text("취소") }
             }
         )
     }
