@@ -5,8 +5,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.han.tripmate.ui.navigation.Routes
 import com.han.tripmate.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +36,8 @@ fun SettingsScreen(
     navController: androidx.navigation.NavHostController,
     onNavigateToLogin: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
     var showDetailDialog by remember { mutableStateOf<String?>(null) }
     var showNameEditDialog by remember { mutableStateOf(false) }
     var tempName by remember { mutableStateOf("") }
@@ -45,6 +51,11 @@ fun SettingsScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     val languageOptions = listOf("한국어", "English", "日本語")
     var selectedLanguage by remember { mutableStateOf("한국어") }
+
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+
+    var showVersionDialog by remember { mutableStateOf(false) }
+    var isCheckingVersion by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -136,7 +147,14 @@ fun SettingsScreen(
                             icon = Icons.Default.Info,
                             title = "버전 정보",
                             subtitle = "1.0.0 (최신버전)",
-                            onClick = { showDetailDialog = "버전 정보" }
+                            onClick = {
+                                scope.launch {
+                                    isCheckingVersion = true
+                                    delay(1000)
+                                    isCheckingVersion = false
+                                    showVersionDialog = true
+                                }
+                            }
                         )
                         SettingItem(
                             icon = Icons.Default.BugReport,
@@ -192,7 +210,7 @@ fun SettingsScreen(
             }
         }
 
-        if (viewModel.isUpdating) {
+        if (viewModel.isUpdating || isCheckingVersion) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = Color.Black.copy(alpha = 0.3f)
@@ -329,6 +347,50 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLanguageDialog = false }) { Text("취소") }
+            }
+        )
+    }
+
+    if (showPrivacyDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyDialog = false },
+            title = { Text("개인정보 처리방침", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth().height(300.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(text = "TripMate(이하 '앱')는 이용자의 개인정보를 소중하게 처리하며, 개인정보보호법 등 관련 법령을 준수합니다.", fontSize = 14.sp, color = Color.DarkGray)
+                    Text(text = "1. 수집하는 개인정보 항목", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = "- 필수 항목: 이메일, 닉네임, 프로필 사진\n- 선택 항목: 여행 선호 지역, 활동 기록 데이터", fontSize = 13.sp, color = Color.Gray)
+                    Text(text = "2. 개인정보의 이용 목적", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = "- 가이드 매칭 서비스 제공 및 유저 식별\n- 푸시 알림 및 이벤트 정보 발송 (동의 시)", fontSize = 13.sp, color = Color.Gray)
+                    Text(text = "3. 개인정보의 보유 및 파기", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(text = "회원 탈퇴 시 수집된 개인정보는 지체 없이 완전히 파기되며, 법령에 의해 보존할 필요가 있는 경우 목적 달성 후 안전하게 삭제됩니다.", fontSize = 13.sp, color = Color.Gray)
+                }
+            },
+            confirmButton = { Button(onClick = { showPrivacyDialog = false }) { Text("동의 및 확인") } }
+        )
+    }
+
+    // 💡 [68일차 추가] 진짜로 확인 작업을 수행하는 버전 정보 알림 팝업
+    if (showVersionDialog) {
+        AlertDialog(
+            onDismissRequest = { showVersionDialog = false },
+            title = { Text("버전 정보 확인", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("현재 설치 버전: 1.0.0", fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("최신 릴리즈 버전: 1.0.0", fontSize = 15.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("현재 최신 버전의 TripMate를 사용하고 있습니다. 새로운 기능이 추가되면 스토어를 통해 알려드릴게요!", fontSize = 13.sp, color = Color.Gray)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showVersionDialog = false }) {
+                    Text("확인")
+                }
             }
         )
     }
