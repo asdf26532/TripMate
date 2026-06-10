@@ -159,7 +159,7 @@ fun SettingsScreen(
                         SettingItem(
                             icon = Icons.Default.BugReport,
                             title = "문의하기 / 피드백",
-                            onClick = { showDetailDialog = "문의하기" }
+                            onClick = { navController.navigate(Routes.FEEDBACK) }
                         )
                         SettingItem(
                             icon = Icons.Default.Description,
@@ -373,7 +373,6 @@ fun SettingsScreen(
         )
     }
 
-    // 💡 [68일차 추가] 진짜로 확인 작업을 수행하는 버전 정보 알림 팝업
     if (showVersionDialog) {
         AlertDialog(
             onDismissRequest = { showVersionDialog = false },

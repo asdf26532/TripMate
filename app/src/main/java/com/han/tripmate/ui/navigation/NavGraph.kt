@@ -14,6 +14,7 @@ import com.han.tripmate.ui.screens.AddServiceScreen
 import com.han.tripmate.ui.screens.ChatPreviewScreen
 import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
+import com.han.tripmate.ui.screens.FeedbackScreen
 import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
 import com.han.tripmate.ui.screens.PlanDetailScreen
@@ -214,6 +215,12 @@ fun TripMateNavGraph(navController: NavHostController) {
                 planId = planId,
                 planTitle = planTitle,
                 viewModel = planViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.FEEDBACK) {
+            FeedbackScreen(
                 onBack = { navController.popBackStack() }
             )
         }

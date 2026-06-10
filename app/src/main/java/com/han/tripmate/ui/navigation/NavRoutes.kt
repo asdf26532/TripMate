@@ -19,6 +19,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val TRAVEL_HISTORY = "travel_history"
     const val TRAVEL_EXPENSE_DETAIL = "travel_expense_detail/{planId}/{planTitle}"
+    const val FEEDBACK = "feedback"
 }
 sealed class BottomNavItem(
     val route: String,
