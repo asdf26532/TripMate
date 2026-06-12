@@ -1,6 +1,7 @@
 package com.han.tripmate.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.han.tripmate.data.TravelService
@@ -8,6 +9,7 @@ import com.han.tripmate.data.TravelRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class TravelViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -45,6 +47,61 @@ class TravelViewModel : ViewModel() {
 
     fun addService(service: TravelService, onComplete: (Boolean) -> Unit) {
         repository.addService(service, onComplete)
+    }
+
+    fun deleteService(serviceId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        viewModelScope.launch {
+            try {
+                db.collection("travel_services")
+                    .document(serviceId)
+                    .delete()
+                    .addOnSuccessListener {
+                        _services.value = _services.value.filter { it.id != serviceId }
+                        onSuccess()
+                    }
+                    .addOnFailureListener { exception ->
+                        onFailure(exception)
+                    }
+            } catch (e: Exception) {
+                onFailure(e)
+            }
+        }
+    }
+
+    fun updateService(
+        serviceId: String,
+        updatedTitle: String,
+        updatedDescription: String,
+        updatedPrice: Int,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val updateData = mapOf(
+                    "title" to updatedTitle,
+                    "description" to updatedDescription,
+                    "price" to updatedPrice
+                )
+
+                db.collection("travel_services")
+                    .document(serviceId)
+                    .update(updateData)
+                    .addOnSuccessListener {
+                        _services.value = _services.value.map {
+                            if (it.id == serviceId) {
+                                it.copy(title = updatedTitle, description = updatedDescription, price = updatedPrice)
+                            } else it
+                        }
+                        onSuccess()
+                    }
+                    .addOnFailureListener { exception ->
+                        onFailure(exception)
+                    }
+            } catch (e: Exception) {
+                onFailure(e)
+            }
+        }
     }
 
     override fun onCleared() {
