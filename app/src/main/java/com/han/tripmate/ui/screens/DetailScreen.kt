@@ -1,5 +1,6 @@
 package com.han.tripmate.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,11 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -38,6 +40,7 @@ fun DetailScreen(
     onBack: () -> Unit,
     onChatClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val services by travelViewModel.services.collectAsState()
     val favoriteIds by travelViewModel.favoriteIds.collectAsState()
     val service = services.find { it.id == serviceId } ?: return
@@ -243,6 +246,94 @@ fun DetailScreen(
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("서비스 삭제", fontWeight = FontWeight.Bold) },
+            text = { Text("정말로 이 가이드 서비스를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        travelViewModel.deleteService(
+                            serviceId = serviceId,
+                            onSuccess = {
+                                Toast.makeText(context, "성공적으로 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                onBack() // 삭제 완료 후 이전 화면으로 튕기기
+                            },
+                            onFailure = {
+                                Toast.makeText(context, "삭제 실패: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text("삭제") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("취소") }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("서비스 정보 수정", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = editTitle,
+                        onValueChange = { editTitle = it },
+                        label = { Text("서비스 제목") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editPrice,
+                        onValueChange = { editPrice = it },
+                        label = { Text("가격 (원)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editDescription,
+                        onValueChange = { editDescription = it },
+                        label = { Text("상세 설명") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 5
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val priceInt = editPrice.toIntOrNull()
+                        if (editTitle.isBlank() || editDescription.isBlank() || priceInt == null) {
+                            Toast.makeText(context, "입력값을 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        showEditDialog = false
+                        travelViewModel.updateService(
+                            serviceId = serviceId,
+                            updatedTitle = editTitle,
+                            updatedDescription = editDescription,
+                            updatedPrice = priceInt,
+                            onSuccess = {
+                                Toast.makeText(context, "글이 성공적으로 수정되었습니다.", Toast.LENGTH_SHORT).show()
+                            },
+                            onFailure = {
+                                Toast.makeText(context, "수정 실패: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+                ) { Text("수정하기") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) { Text("취소") }
+            }
+        )
     }
 }
 

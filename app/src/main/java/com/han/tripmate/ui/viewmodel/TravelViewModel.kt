@@ -72,7 +72,7 @@ class TravelViewModel : ViewModel() {
         serviceId: String,
         updatedTitle: String,
         updatedDescription: String,
-        updatedPrice: Int,
+        updatedPrice: Long,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
