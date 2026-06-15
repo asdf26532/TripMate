@@ -113,4 +113,49 @@ class TravelViewModel : ViewModel() {
         val current = _favoriteIds.value
         _favoriteIds.value = if (current.contains(serviceId)) current - serviceId else current + serviceId
     }
+
+    fun startChatting(
+        guideAuthorId: String,
+        onSuccess: (String) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserId == null) {
+            onFailure(Exception("로그인이 필요한 서비스입니다."))
+            return
+        }
+
+        if (currentUserId == guideAuthorId) {
+            onFailure(Exception("본인과는 채팅할 수 없습니다."))
+            return
+        }
+
+        val roomId = if (currentUserId < guideAuthorId) {
+            "${currentUserId}_$guideAuthorId"
+        } else {
+            "${guideAuthorId}_$currentUserId"
+        }
+
+        val chatRoomRef = db.collection("chat_rooms").document(roomId)
+
+        chatRoomRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                onSuccess(roomId)
+            } else {
+                val chatRoomData = mapOf(
+                    "roomId" to roomId,
+                    "participants" to listOf(currentUserId, guideAuthorId),
+                    "lastMessage" to "채팅방이 개설되었습니다.",
+                    "lastMessageAt" to com.google.firebase.Timestamp.now()
+                )
+
+                chatRoomRef.set(chatRoomData)
+                    .addOnSuccessListener { onSuccess(roomId) }
+                    .addOnFailureListener { onFailure(it) }
+            }
+        }.addOnFailureListener { exception ->
+            onFailure(exception)
+        }
+    }
+
 }

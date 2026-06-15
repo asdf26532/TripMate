@@ -261,7 +261,7 @@ fun DetailScreen(
                             serviceId = serviceId,
                             onSuccess = {
                                 Toast.makeText(context, "성공적으로 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                                onBack() // 삭제 완료 후 이전 화면으로 튕기기
+                                onBack()
                             },
                             onFailure = {
                                 Toast.makeText(context, "삭제 실패: ${it.message}", Toast.LENGTH_SHORT).show()
@@ -307,8 +307,8 @@ fun DetailScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val priceInt = editPrice.toIntOrNull()
-                        if (editTitle.isBlank() || editDescription.isBlank() || priceInt == null) {
+                        val priceLong = editPrice.toLongOrNull()
+                        if (editTitle.isBlank() || editDescription.isBlank() || priceLong == null) {
                             Toast.makeText(context, "입력값을 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
@@ -318,7 +318,7 @@ fun DetailScreen(
                             serviceId = serviceId,
                             updatedTitle = editTitle,
                             updatedDescription = editDescription,
-                            updatedPrice = priceInt,
+                            updatedPrice = priceLong,
                             onSuccess = {
                                 Toast.makeText(context, "글이 성공적으로 수정되었습니다.", Toast.LENGTH_SHORT).show()
                             },
