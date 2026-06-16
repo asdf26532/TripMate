@@ -116,6 +116,7 @@ class TravelViewModel : ViewModel() {
 
     fun startChatting(
         guideAuthorId: String,
+        guideAuthorNickname: String,
         onSuccess: (String) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
@@ -130,11 +131,8 @@ class TravelViewModel : ViewModel() {
             return
         }
 
-        val roomId = if (currentUserId < guideAuthorId) {
-            "${currentUserId}_$guideAuthorId"
-        } else {
-            "${guideAuthorId}_$currentUserId"
-        }
+        val sortedIds = listOf(currentUserId, guideAuthorId).sorted()
+        val roomId = "room_${sortedIds[0]}_${sortedIds[1]}"
 
         val chatRoomRef = db.collection("chat_rooms").document(roomId)
 
@@ -142,11 +140,14 @@ class TravelViewModel : ViewModel() {
             if (document.exists()) {
                 onSuccess(roomId)
             } else {
+                val timestampStr = System.currentTimeMillis().toString()
                 val chatRoomData = mapOf(
-                    "roomId" to roomId,
-                    "participants" to listOf(currentUserId, guideAuthorId),
+                    "id" to roomId,
+                    "otherUserId" to guideAuthorId,
+                    "otherNickname" to guideAuthorNickname,
                     "lastMessage" to "채팅방이 개설되었습니다.",
-                    "lastMessageAt" to com.google.firebase.Timestamp.now()
+                    "lastTimestamp" to timestampStr,
+                    "participants" to listOf(currentUserId, guideAuthorId)
                 )
 
                 chatRoomRef.set(chatRoomData)

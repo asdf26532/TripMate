@@ -84,10 +84,19 @@ fun DetailScreen(
                             Text(text = " / ${service.priceUnit}", fontSize = 12.sp, color = Color.Gray)
                         }
                     }
-
-                    // 오른쪽: 채팅하기 버튼
                     Button(
-                        onClick = { onChatClick(service.authorId) },
+                        onClick = {
+                            travelViewModel.startChatting(
+                                guideAuthorId = service.authorId,
+                                guideAuthorNickname = "가이드",
+                                onSuccess = { createdRoomId ->
+                                    onChatClick(createdRoomId)
+                                },
+                                onFailure = { exception ->
+                                    Toast.makeText(context, exception.message ?: "채팅방 개설 실패", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        },
                         modifier = Modifier
                             .width(180.dp)
                             .height(56.dp),
