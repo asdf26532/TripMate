@@ -20,6 +20,7 @@ object Routes {
     const val TRAVEL_HISTORY = "travel_history"
     const val TRAVEL_EXPENSE_DETAIL = "travel_expense_detail/{planId}/{planTitle}"
     const val FEEDBACK = "feedback"
+    const val FAVORITE_LIST = "favorite_list"
 }
 sealed class BottomNavItem(
     val route: String,
