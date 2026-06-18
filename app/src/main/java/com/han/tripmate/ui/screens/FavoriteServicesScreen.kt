@@ -1,18 +1,30 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.han.tripmate.data.TravelService
+import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.TravelViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +37,9 @@ fun FavoriteServicesScreen(
     val services by travelViewModel.services.collectAsState()
     val favoriteIds by travelViewModel.favoriteIds.collectAsState()
 
-    val favoriteServices = services.filter { favoriteIds.contains(it.id) }
+    val favoriteServices = remember(services, favoriteIds) {
+        services.filter { favoriteIds.contains(it.id) }
+    }
 
     Scaffold(
         topBar = {
@@ -73,9 +87,106 @@ fun FavoriteServicesScreen(
                     )
                 }
             } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("찜 데이터가 발견되었습니다. (76일차 리스트 구현 예정)", color = Color.Gray)
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(favoriteServices, key = { it.id }) { service ->
+                        FavoriteServiceCard(
+                            service = service,
+                            onItemClick = { onServiceClick(service.id) },
+                            onFavoriteClick = { travelViewModel.toggleFavorite(service.id) }
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteServiceCard(
+    service: TravelService,
+    onItemClick: () -> Unit,
+    onFavoriteClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onItemClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (!service.images.isNullOrEmpty()) {
+                AsyncImage(
+                    model = service.images,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.LightGray.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = service.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${String.format("%,d", service.price)}원",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        color = MainBlue
+                    )
+                    Text(
+                        text = " / ${service.priceUnit}",
+                        fontSize = 11.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
+            }
+
+            IconButton(onClick = onFavoriteClick) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "찜 취소",
+                    tint = Color.Red
+                )
             }
         }
     }
