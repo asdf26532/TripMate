@@ -41,6 +41,9 @@ fun FavoriteServicesScreen(
         services.filter { favoriteIds.contains(it.id) }
     }
 
+    var showRemoveDialog by remember { mutableStateOf(false) }
+    var selectedServiceIdByRemove by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,14 +99,53 @@ fun FavoriteServicesScreen(
                         FavoriteServiceCard(
                             service = service,
                             onItemClick = { onServiceClick(service.id) },
-                            onFavoriteClick = { travelViewModel.toggleFavorite(service.id) }
+                            onFavoriteClick = {
+                                selectedServiceIdByRemove = service.id
+                                showRemoveDialog = true
+                            }
                         )
                     }
                 }
             }
         }
     }
+
+    if (showRemoveDialog && selectedServiceIdByRemove != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showRemoveDialog = false
+                selectedServiceIdByRemove = null
+            },
+            title = { Text("찜 해제", fontWeight = FontWeight.Bold) },
+            text = { Text("해당 가이드 서비스를 찜 목록에서 제외하시겠습니까?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedServiceIdByRemove?.let { id ->
+                            travelViewModel.toggleFavorite(id)
+                        }
+                        showRemoveDialog = false
+                        selectedServiceIdByRemove = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("제외")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showRemoveDialog = false
+                        selectedServiceIdByRemove = null
+                    }
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 fun FavoriteServiceCard(
