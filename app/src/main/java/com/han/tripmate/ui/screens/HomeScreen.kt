@@ -40,6 +40,8 @@ import com.han.tripmate.data.model.UserRole
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.AuthViewModel
 import com.han.tripmate.ui.viewmodel.TravelViewModel
+import com.han.tripmate.data.FilterConstants
+import com.han.tripmate.ui.components.FilterChipGroup
 
 @Composable
 fun HomeScreen(authViewModel: AuthViewModel,
@@ -48,20 +50,13 @@ fun HomeScreen(authViewModel: AuthViewModel,
 
     val user by authViewModel.currentUser.collectAsState()
 
-    if (user?.currentRole == UserRole.GUIDE) {
-        GuideDashboard()
-    } else {
-        TravelerHome(authViewModel, travelViewModel, navController)
-    }
-
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("add_service") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier.offset(y = 50.dp)
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "가이드 등록")
             }
@@ -69,7 +64,11 @@ fun HomeScreen(authViewModel: AuthViewModel,
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            TravelerHome(authViewModel, travelViewModel, navController)
+            if (user?.currentRole == UserRole.GUIDE) {
+                GuideDashboard()
+            } else {
+                TravelerHome(authViewModel, travelViewModel, navController)
+            }
         }
     }
 }
@@ -83,20 +82,25 @@ fun TravelerHome(
 
     val user by authViewModel.currentUser.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-    val serviceList by travelViewModel.services.collectAsState()
+
+    val selectedRegion by travelViewModel.selectedRegion.collectAsState()
+    val selectedCategory by travelViewModel.selectedCategory.collectAsState()
+    val backendFilteredServices by travelViewModel.filteredServices.collectAsState()
     val favoriteIds by travelViewModel.favoriteIds.collectAsState()
 
-    val filteredServices = remember(searchQuery, serviceList) {
+    val finalServices = remember(searchQuery, backendFilteredServices) {
         if (searchQuery.isEmpty()) {
-            serviceList
+            backendFilteredServices
         } else {
-            serviceList.filter { service ->
+            backendFilteredServices.filter { service ->
                 service.title.contains(searchQuery, ignoreCase = true) ||
                         service.location.contains(searchQuery, ignoreCase = true) ||
-                        service.category.contains(searchQuery, ignoreCase = true)
+                        service.category.contains(searchQuery, ignoreCase = true) ||
+                        service.description.contains(searchQuery, ignoreCase = true)
             }
         }
     }
+
     LazyColumn (
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 12.dp)

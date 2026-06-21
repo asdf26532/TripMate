@@ -6,10 +6,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.data.TravelRepository
+import com.han.tripmate.data.FilterConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 class TravelViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -22,6 +26,30 @@ class TravelViewModel : ViewModel() {
 
     private val _favoriteIds = MutableStateFlow(setOf<String>())
     val favoriteIds: StateFlow<Set<String>> = _favoriteIds.asStateFlow()
+
+    private val _selectedRegion = MutableStateFlow(FilterConstants.REGIONS[0])
+    val selectedRegion: StateFlow<String> = _selectedRegion.asStateFlow()
+
+    private val _selectedCategory = MutableStateFlow(FilterConstants.CATEGORIES[0])
+    val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
+
+    val filteredServices: StateFlow<List<TravelService>> = combine(
+        _services,
+        _selectedRegion,
+        _selectedCategory
+    ) { services, region, category ->
+        services.filter { service ->
+            val matchesRegion = region == FilterConstants.REGIONS[0] || service.location == region
+
+            val matchesCategory = category == FilterConstants.CATEGORIES[0] || service.category == category
+
+            matchesRegion && matchesCategory
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     init {
         fetchServices()
@@ -43,6 +71,14 @@ class TravelViewModel : ViewModel() {
 
                 _services.value = list
             }
+    }
+
+    fun selectRegion(region: String) {
+        _selectedRegion.value = region
+    }
+
+    fun selectCategory(category: String) {
+        _selectedCategory.value = category
     }
 
     fun addService(service: TravelService, onComplete: (Boolean) -> Unit) {
