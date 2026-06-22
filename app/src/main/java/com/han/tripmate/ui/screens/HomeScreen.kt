@@ -65,7 +65,7 @@ fun HomeScreen(authViewModel: AuthViewModel,
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             if (user?.currentRole == UserRole.GUIDE) {
-                GuideDashboard()
+                GuideDashboard(navController = navController)
             } else {
                 TravelerHome(authViewModel, travelViewModel, navController)
             }
@@ -137,13 +137,39 @@ fun TravelerHome(
             Spacer(modifier = Modifier.height(12.dp))
         }
         item {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "맞춤 가이드 찾기",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+                )
+
+                FilterChipGroup(
+                    items = FilterConstants.REGIONS,
+                    selectedItem = selectedRegion,
+                    onSelectedChanged = { travelViewModel.selectRegion(it) },
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+
+                FilterChipGroup(
+                    items = FilterConstants.CATEGORIES,
+                    selectedItem = selectedCategory,
+                    onSelectedChanged = { travelViewModel.selectCategory(it) },
+                    modifier = Modifier.padding(top = 0.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
+
+        item {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = { Text("지역, 서비스, 가이드 검색") },
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("결과 내 상세 키워드 검색") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -153,10 +179,16 @@ fun TravelerHome(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MainBlue,
+                    unfocusedBorderColor = Color(0xFFE9ECEF)
+                )
             )
+            HorizontalDivider(color = Color(0xFFE9ECEF), thickness = 1.dp, modifier = Modifier.padding(top = 8.dp))
         }
-        items(filteredServices) { service ->
+
+        items(finalServices, key = { it.id }) { service ->
             ServiceListItem(
                 service = service,
                 isFavorite = favoriteIds.contains(service.id),
@@ -164,13 +196,16 @@ fun TravelerHome(
                 onItemClick = { id -> navController.navigate("detail/$id") }
             )
         }
-        if (filteredServices.isEmpty()) {
+
+        if (finalServices.isEmpty()) {
             item {
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(top = 50.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 60.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("검색 결과가 없습니다.", color = Color.Gray)
+                    Text("선택하신 조건에 일치하는 가이드 결과가 없습니다.", color = Color.Gray, fontSize = 14.sp)
                 }
             }
         }
@@ -311,7 +346,7 @@ fun HomeGuideSection(navController: NavHostController) {
 }
 
 @Composable
-fun GuideDashboard() {
+fun GuideDashboard(navController: NavHostController) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -342,7 +377,7 @@ fun GuideDashboard() {
         }
 
         Button(
-            onClick = { /* 새 서비스 등록 */ },
+            onClick = { navController.navigate("add_service") },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -548,11 +583,13 @@ fun TravelerHomePreview() {
 @Composable
 fun GuideDashboardPreview() {
     MaterialTheme {
+        val fakeNavController = rememberNavController()
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color(0xFFF8F9FA)
         ) {
-            GuideDashboard()
+            GuideDashboard(navController = fakeNavController)
         }
     }
 }
