@@ -166,6 +166,48 @@ fun SettingsScreen(
                             title = "오픈소스 라이선스",
                             onClick = { showDetailDialog = "오픈소스 라이선스" }
                         )
+
+                        ListItem(
+                            headlineContent = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("TripMate 실험실", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = Color(0xFFFF9800).copy(alpha = 0.15f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "BETA",
+                                            fontSize = 10.sp,
+                                            color = Color(0xFFE65100),
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            supportingContent = { Text("TripMate가 준비 중인 이색 기능을 먼저 체험해보세요.", fontSize = 13.sp, color = Color.Gray) },
+                            leadingContent = {
+                                Box(
+                                    modifier = Modifier.size(24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("🧪", fontSize = 20.sp)
+                                }
+                            },
+                            trailingContent = {
+                                Icon(
+                                    Icons.Default.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = Color.LightGray,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            modifier = Modifier.clickable {
+                                navController.navigate("labs")
+                            }
+                        )
                     }
                 }
 
