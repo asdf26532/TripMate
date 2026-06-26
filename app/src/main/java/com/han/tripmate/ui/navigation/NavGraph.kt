@@ -16,6 +16,7 @@ import com.han.tripmate.ui.screens.ChatScreen
 import com.han.tripmate.ui.screens.DetailScreen
 import com.han.tripmate.ui.screens.FavoriteServicesScreen
 import com.han.tripmate.ui.screens.FeedbackScreen
+import com.han.tripmate.ui.screens.LabsScreen
 import com.han.tripmate.ui.screens.LoginScreen
 import com.han.tripmate.ui.screens.MainScreen
 import com.han.tripmate.ui.screens.PlanDetailScreen
@@ -233,6 +234,13 @@ fun TripMateNavGraph(navController: NavHostController) {
                 onServiceClick = { serviceId ->
                     navController.navigate("detail/$serviceId")
                 }
+            )
+        }
+
+        composable("labs") {
+            LabsScreen(
+                navController = navController,
+                travelViewModel = travelViewModel
             )
         }
 

@@ -1,6 +1,7 @@
 package com.han.tripmate.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,11 +34,11 @@ fun LabsScreen(
     travelViewModel: TravelViewModel
 ) {
     val scope = rememberCoroutineScope()
-
     val allServices by travelViewModel.services.collectAsState()
 
     var isShuffling by remember { mutableStateOf(false) }
     var rolledService by remember { mutableStateOf<TravelService?>(null) }
+    var hasRolled by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -55,89 +56,142 @@ fun LabsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color(0xFFF8F9FA))
+                .padding(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "연구 과제 #01. 가이드 랜덤 디코더",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MainBlue
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "어디로 떠나야 할지 선택 장애가 찾아온 여행자를 위한 복불복 추천 엔진입니다. 룰렛을 가동해 우연이 선물하는 뜻밖의 로컬 가이드를 만나보세요!",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(0.2f))
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(380.dp),
+                    .height(340.dp)
+                    .clickable(enabled = !isShuffling && rolledService != null) {
+                        rolledService?.let { service ->
+                            navController.navigate("detail/${service.id}")
+                        }
+                    },
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isShuffling) Color(0xFF111827) else Color.White
+                ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    if (rolledService != null) {
+                if (isShuffling) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF00F5FF), strokeWidth = 3.dp)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = "AI 가이드 매칭 매트릭스 디코딩 중...",
+                            color = Color(0xFF00F5FF),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = rolledService?.title ?: "",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                    }
+                } else if (hasRolled && rolledService != null) {
+                    Column(modifier = Modifier.fillMaxSize()) {
                         AsyncImage(
-                            model = rolledService?.images,
-                            contentDescription = "가이드 이미지",
+                            model = rolledService?.images?.firstOrNull(),
+                            contentDescription = "추천 가이드 썸네일",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
+                                .height(200.dp)
                                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                             contentScale = ContentScale.Crop
                         )
-
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = rolledService?.title ?: "",
-                                fontSize = 18.sp,
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
-
-                            // 가격 및 뱃지 행
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isShuffling) "가격 계산 중..." else "${rolledService?.price}원",
-                                    fontSize = 20.sp,
+                                    text = "${rolledService?.price}원",
+                                    fontSize = 19.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MainBlue
                                 )
-
-                                if (!isShuffling) {
-                                    Surface(
-                                        color = MainBlue.copy(alpha = 0.1f),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text(
-                                            text = "추천 가이드",
-                                            color = MainBlue,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
-                                    }
+                                Surface(
+                                    color = MainBlue.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = "👉 터치하여 상세화면 이동",
+                                        color = MainBlue,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
                                 }
                             }
                         }
-                    } else {
-                        // 초기 상태 (아직 아무것도 안 뽑혔을 때)
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "어디로 떠날지 모르겠다면?\n아래 버튼을 눌러보세요! 🎰",
-                                textAlign = TextAlign.Center,
-                                color = Color.Gray,
-                                fontSize = 16.sp,
-                                lineHeight = 24.sp
-                            )
-                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("🎰", fontSize = 50.sp)
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "오늘 어디 갈지 운명에 맡겨봐요.\n아래 룰렛을 당겨보세요!",
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            lineHeight = 22.sp
+                        )
                     }
                 }
             }
