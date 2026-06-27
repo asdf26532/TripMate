@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,9 +17,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.han.tripmate.data.TravelService
 import com.han.tripmate.ui.theme.MainBlue
@@ -31,14 +34,25 @@ import kotlin.random.Random
 @Composable
 fun LabsScreen(
     navController: NavHostController,
-    travelViewModel: TravelViewModel
+    travelViewModel: TravelViewModel? = null
 ) {
     val scope = rememberCoroutineScope()
-    val allServices by travelViewModel.services.collectAsState()
+
+    val allServices = if (travelViewModel != null) {
+        travelViewModel.services.collectAsState().value
+    } else {
+        listOf(
+            TravelService(id = "1", title = "[부산] 광안리 요트 투어 & 드론쇼", price = 25000, images = listOf("")),
+            TravelService(id = "2", title = "[제주] 감성 가득 돌담 카페 투어", price = 18000, images = listOf("")),
+            TravelService(id = "3", title = "[경주] 야경 명소 안압지 가이드 투어", price = 12000, images = listOf(""))
+        )
+    }
 
     var isShuffling by remember { mutableStateOf(false) }
     var rolledService by remember { mutableStateOf<TravelService?>(null) }
     var hasRolled by remember { mutableStateOf(false) }
+
+    val rollHistory = remember { mutableStateListOf<TravelService>() }
 
     Scaffold(
         topBar = {
@@ -183,15 +197,25 @@ fun LabsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("🎰", fontSize = 50.sp)
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Text(
-                            text = "오늘 어디 갈지 운명에 맡겨봐요.\n아래 룰렛을 당겨보세요!",
-                            textAlign = TextAlign.Center,
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            lineHeight = 22.sp
-                        )
+                        if (allServices.isEmpty()) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "가이드 데이터를 불러오는 중입니다...",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        } else {
+                            Text("🎰", fontSize = 50.sp)
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "오늘 어디 갈지 운명에 맡겨봐요.\n아래 룰렛을 당겨보세요!",
+                                textAlign = TextAlign.Center,
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                lineHeight = 22.sp
+                            )
+                        }
                     }
                 }
             }
@@ -205,22 +229,43 @@ fun LabsScreen(
                     scope.launch {
                         isShuffling = true
 
-                        var speed = 50L
-                        repeat(20) {
+                        val totalTicks = Random.nextInt(18, 27)
+                        var speed = 35L
+
+                        repeat(totalTicks) {
                             val randomIndex = Random.nextInt(allServices.size)
                             rolledService = allServices[randomIndex]
                             delay(speed)
-                            speed += 15L
+                            speed += 14L
                         }
 
                         isShuffling = false
                     }
                 },
-                enabled = !isShuffling,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
+                enabled = !isShuffling && allServices.isNotEmpty(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (allServices.isEmpty()) Color.LightGray else MainBlue
+                )
             ) {
-                Text(if (isShuffling) "추천 가이드 검색 중..." else "가이드 룰렛 돌리기 🚀")
+                Icon(Icons.Default.Casino, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isShuffling) "디코더 매칭 중..." else "가이드 룰렛 돌리기 🚀",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 740)
+@Composable
+fun LabsScreenPreview() {
+    val fakeNavController = rememberNavController()
+    LabsScreen(navController = fakeNavController, travelViewModel = null)
 }
