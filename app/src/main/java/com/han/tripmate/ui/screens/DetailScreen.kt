@@ -2,7 +2,9 @@ package com.han.tripmate.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
@@ -189,7 +192,77 @@ fun DetailScreen(
                     color = Color.DarkGray
                 )
 
-                Spacer(modifier = Modifier.height(100.dp))
+                HorizontalDivider(modifier = Modifier.padding(top = 40.dp, bottom = 24.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "함께 보면 좋은 다른 여행 가이드 🗺️",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+
+                        val recommendations = services
+                            .filter { it.id != serviceId }
+                            .shuffled()
+                            .take(5)
+
+                        items(recommendations) { recommendedService ->
+                            Card(
+                                modifier = Modifier
+                                    .width(160.dp)
+                                    .clickable {
+
+                                        travelViewModel.startChatting(
+                                            guideAuthorId = recommendedService.authorId,
+                                            guideAuthorNickname = "가이드",
+                                            onSuccess = {},
+                                            onFailure = {}
+                                        )
+
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column {
+                                    AsyncImage(
+                                        model = recommendedService.images?.firstOrNull(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(100.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Text(
+                                            text = recommendedService.title,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "${String.format("%,d", recommendedService.price)}원",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MainBlue
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
 
@@ -200,7 +273,6 @@ fun DetailScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 왼쪽: 뒤로가기 버튼
             IconButton(
                 onClick = onBack,
                 modifier = Modifier.padding(top = 25.dp, start = 5.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
@@ -208,7 +280,6 @@ fun DetailScreen(
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = Color.White)
             }
 
-            // 오른쪽: 액션 영역 (본인 글이면 수정/삭제 메뉴, 타인 글이면 찜하기 버튼)
             Row(modifier = Modifier.padding(top = 25.dp)) {
                 if (isMyService) {
                     Box {
