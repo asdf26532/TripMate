@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,8 @@ import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.han.tripmate.ui.theme.MainBlue
 import com.han.tripmate.ui.viewmodel.TravelViewModel
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 @Composable
 fun DetailScreen(
@@ -60,6 +63,9 @@ fun DetailScreen(
     var editDescription by remember { mutableStateOf(service.description) }
     var editPrice by remember { mutableStateOf(service.price.toString()) }
 
+    var isChatLoading by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
     Scaffold(
         bottomBar = {
             Surface(
@@ -84,29 +90,62 @@ fun DetailScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MainBlue
                             )
-                            Text(text = " / ${service.priceUnit}", fontSize = 12.sp, color = Color.Gray)
+                            Text(
+                                text = " / ${service.priceUnit}",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
                         }
                     }
                     Button(
                         onClick = {
-                            travelViewModel.startChatting(
+                            if (isChatLoading) return@Button
+
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                            isChatLoading = true
+
+                            travelViewModel?.startChatting(
                                 guideAuthorId = service.authorId,
                                 guideAuthorNickname = "가이드",
                                 onSuccess = { createdRoomId ->
+                                    isChatLoading = false
                                     onChatClick(createdRoomId)
                                 },
                                 onFailure = { exception ->
-                                    Toast.makeText(context, exception.message ?: "채팅방 개설 실패", Toast.LENGTH_SHORT).show()
+                                    isChatLoading = false
+                                    Toast.makeText(
+                                        context,
+                                        exception.message ?: "채팅방 개설 실패",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             )
                         },
                         modifier = Modifier
                             .width(180.dp)
                             .height(56.dp),
+                        enabled = !isChatLoading,
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MainBlue)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MainBlue,
+                            disabledContainerColor = MainBlue.copy(alpha = 0.5f)
+                        )
                     ) {
-                        Text("채팅하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        if (isChatLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.5.dp
+                            )
+                        } else {
+                            Text(
+                                "채팅하기",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
