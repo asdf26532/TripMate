@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,6 +66,21 @@ fun DetailScreen(
 
     var isChatLoading by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+
+    val shareServiceDetails = {
+        val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(
+                android.content.Intent.EXTRA_SUBJECT,
+                "[TripMate] 여행 가이드 추천: ${service.title}"
+            )
+            putExtra(
+                android.content.Intent.EXTRA_TEXT,
+                "✨ TripMate에서 추천하는 여행 가이드 상품입니다!\n\n📌 상품명: ${service.title}\n💵 금액: ${String.format("%,d", service.price)}원 / ${service.priceUnit}\n\n지금 TripMate 앱에서 확인해보세요! 🗺️"
+            )
+        }
+        context.startActivity(android.content.Intent.createChooser(shareIntent, "가이드 공유하기"))
+    }
 
     Scaffold(
         bottomBar = {
@@ -306,62 +322,62 @@ fun DetailScreen(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp, start = 5.dp, end = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(top = 25.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = onBack,
-                modifier = Modifier.padding(top = 25.dp, start = 5.dp).background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                onClick = { shareServiceDetails() },
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "공유하기",
+                    tint = Color.White
+                )
             }
 
-            Row(modifier = Modifier.padding(top = 25.dp)) {
-                if (isMyService) {
-                    Box {
-                        IconButton(
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
-                        ) {
-                            Icon(imageVector = Icons.Default.MoreVert, contentDescription = "더보기", tint = Color.White)
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("수정하기") },
-                                onClick = {
-                                    menuExpanded = false
-                                    editTitle = service.title
-                                    editDescription = service.description
-                                    editPrice = service.price.toString()
-                                    showEditDialog = true
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("삭제하기", color = Color.Red) },
-                                onClick = {
-                                    menuExpanded = false
-                                    showDeleteDialog = true
-                                }
-                            )
-                        }
-                    }
-                } else {
+            if (isMyService) {
+                Box {
                     IconButton(
-                        onClick = { travelViewModel.toggleFavorite(serviceId) },
+                        onClick = { menuExpanded = true },
                         modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
                     ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            tint = if (isFavorite) Color.Red else Color.White
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "더보기", tint = Color.White)
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("수정하기") },
+                            onClick = {
+                                menuExpanded = false
+                                editTitle = service.title
+                                editDescription = service.description
+                                editPrice = service.price.toString()
+                                showEditDialog = true
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("삭제하기", color = Color.Red) },
+                            onClick = {
+                                menuExpanded = false
+                                showDeleteDialog = true
+                            }
                         )
                     }
+                }
+            } else {
+                IconButton(
+                    onClick = { travelViewModel.toggleFavorite(serviceId) },
+                    modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) Color.Red else Color.White
+                    )
                 }
             }
         }
